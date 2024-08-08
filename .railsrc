@@ -1,0 +1,4 @@
+-d postgresql
+--minimal
+--skip-test
+-m ~/Code/Rails/template.rb
