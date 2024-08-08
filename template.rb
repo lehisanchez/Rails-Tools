@@ -1,0 +1,6 @@
+gem "devise"
+gem "high_voltage"
+gem "importmap-rails"
+gem "stimulus-rails"
+gem "tailwindcss-rails"
+gem "turbo-rails"
