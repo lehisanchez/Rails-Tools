@@ -14,16 +14,25 @@ gem_group :test do
 end
 
 gem_group :development, :test do
-  gem "rspec-rails"
+  gem "rspec-rails", require: false
 end
 
 after_bundle do
-  rails_command("rails importmap:install")
-  rails_command("rails turbo:install")
-  rails_command("rails stimulus:install")
-  rails_command("rails tailwindcss:install")
-  rails_command("rails generate rspec:install")
-  rails_command("rails generate devise:install")
+  rails_command("importmap:install")
+  rails_command("turbo:install")
+  rails_command("stimulus:install")
+  rails_command("tailwindcss:install")
+  rails_command("generate rspec:install")
+
+  # Devise
+  rails_command("generate devise:install")
+
+  # inject_into_file 'config/environments/development.rb', before: "  end" do
+  #   '# config.action_mailer.default_url_options = { host: "localhost", port: 3000 }'
+  # end
+
+  environment '# config.action_mailer.default_url_options = { host: "localhost", port: 3000 }', env: 'development'
+
 
   # High Voltage
   file 'app/views/pages/home.html.erb', <<-CODE
@@ -39,12 +48,24 @@ after_bundle do
 
   # Rubocop
   file '.rubocop.yml', <<-CODE
-    inherit_gem:
-      rubocop-rails-omakase: rubocop.yml
+  inherit_gem:
+    rubocop-rails-omakase: rubocop.yml
+  CODE
+
+  # Readme
+  file 'app/components/foo.rb', <<-CODE
+    "#
   CODE
 
   # Git
-  git :init
-  git add: "."
-  git commit: "-a -m 'Initial commit'"
+  inject_into_file '.gitignore' do
+    "\n# Hidden system files\n.DS_Store"
+  end
+
+  # git add: "."
+  # git commit: "-a -m 'Initial commit'"
+
+  run "code ."
+  run "open http://localhost:3000"
+  run "bin/dev"
 end
