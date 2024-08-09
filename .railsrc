@@ -1,8 +1,8 @@
--d postgresql
+--database=postgresql
 --css=tailwind
 --skip-action-mailbox
 --skip-action-text
 --skip-docker
 --skip-test
 --skip-system-test
--m ~/Code/Rails/template.rb
+--template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
