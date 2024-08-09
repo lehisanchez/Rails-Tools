@@ -4,7 +4,6 @@
 --css=tailwind
 --asset-pipeline=propshaft
 
---skip-bundle
 --skip-jbuilder
 --skip-action-mailbox
 --skip-action-text
