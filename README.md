@@ -1,10 +1,16 @@
-# Rails Default Template
+# Rails Applications
 
-My default template for generating new Rails applications.
+My default workflow for starting a Ruby on Rails application.
 
 ## Requirements
 
 Install the latest ruby version and set it as global using rbenv via brew. See [https://github.com/rbenv/](https://github.com/rbenv/rbenv).
+
+### Install rust (for YJIT)
+
+```shell
+brew install rust
+```
 
 ### Install rbenv
 
@@ -16,9 +22,21 @@ brew install ruby-build
 
 ```shell
 rbenv init
-rbenv install 3.3.0 #{OR_LATEST_RUBY_VERSION}
-rbenv global 3.3.0 #{OR_LATEST_RUBY_VERSION}
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install #{RUBY_VERSION}
+rbenv global #{RUBY_VERSION}
 rbenv rehash
+```
+
+Check the installation
+
+```shell
+ruby -v --yjit
+```
+
+You should see something like:
+
+```shell
+ruby 3.3.4 (2024-07-09 revision be1089c8ec) +YJIT [arm64-darwin23]
 ```
 
 ### Configure Ruby Gems
