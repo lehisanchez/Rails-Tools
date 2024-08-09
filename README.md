@@ -59,13 +59,20 @@ touch ~/.railsrc
 Add the following to ~/.railsrc
 
 ```yaml
+--main
+
 --database=postgresql
 --css=tailwind
+--asset-pipeline=propshaft
+
+--skip-bundle
+--skip-jbuilder
 --skip-action-mailbox
 --skip-action-text
---skip-docker
 --skip-test
 --skip-system-test
+--skip-decrypted-diffs
+
 --template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
 ```
 
