@@ -1,6 +1,15 @@
-gem "shoulda-matchers", require: false, group: [ :test ]
-gem "rspec-rails", require: false, group: [ :development, :test ]
-gem "rubocop-rails-omakase", require: false, group: [ :development ]
+gem_group :test do
+  gem 'shoulda-matchers', '~> 6.0'
+end
+
+gem_group :development, :test do
+  gem "rspec-rails", require: false
+end
+
+gem_group :development do
+  gem "rubocop-rails-omakase", require: false
+end
+
 gem "devise"
 gem "high_voltage"
 
@@ -15,7 +24,7 @@ after_bundle do
   #   '# config.action_mailer.default_url_options = { host: "localhost", port: 3000 }'
   # end
 
-  environment '# config.action_mailer.default_url_options = { host: "localhost", port: 3000 }', env: 'development'
+  environment 'config.action_mailer.default_url_options = { host: "localhost", port: 3000 }', env: 'development'
 
   # High Voltage
   file 'app/views/pages/home.html.erb', <<-CODE
@@ -56,7 +65,7 @@ after_bundle do
   git add: "."
   git commit: "-a -m 'Initial commit'"
 
-  run "code ."
-  run "open http://localhost:3000"
-  run "bin/dev"
+  # run "code ."
+  # run "open http://localhost:3000"
+  # run "bin/dev"
 end
