@@ -4,7 +4,7 @@ My default template for generating new Rails applications.
 
 ## Requirements
 
-Install the latest ruby version and set it as global using rbenv via brew.
+Install the latest ruby version and set it as global using rbenv via brew. See [https://github.com/rbenv/](https://github.com/rbenv/rbenv).
 
 ### Install rbenv
 
@@ -16,14 +16,14 @@ brew install ruby-build
 
 ```shell
 rbenv init
-rbenv install # LATEST RUBY e.g 3.3.4
-rbenv global # LATEST RUBY e.g 3.3.4
+rbenv install 3.3.0 #{OR_LATEST_RUBY_VERSION}
+rbenv global 3.3.0 #{OR_LATEST_RUBY_VERSION}
 rbenv rehash
 ```
 
 ### Configure Ruby Gems
 
-Create a .gemrc file in your $HOME (e.g. ~/.gemrc)
+Create a .gemrc file. See [https://guides.rubygems.org/](https://guides.rubygems.org/command-reference/#gem-environment).
 
 ```shell
 touch ~/.gemrc
