@@ -1,10 +1,9 @@
---main
-
 --database=postgresql
 --css=tailwind
 --asset-pipeline=propshaft
 
---skip-jbuilder
+--main
+--skip-docker
 --skip-action-mailbox
 --skip-action-text
 --skip-test
