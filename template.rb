@@ -1,27 +1,11 @@
+gem "shoulda-matchers", require: false, group: [ :test ]
+gem "rspec-rails", require: false, group: [ :development, :test ]
+gem "rubocop-rails-omakase", require: false, group: [ :development ]
 gem "devise"
 gem "high_voltage"
-gem "importmap-rails"
-gem "stimulus-rails"
-gem "tailwindcss-rails"
-gem "turbo-rails"
-
-gem_group :development do
-  gem "rubocop-rails-omakase", require: false
-end
-
-gem_group :test do
-  gem "shoulda-matchers"
-end
-
-gem_group :development, :test do
-  gem "rspec-rails", require: false
-end
 
 after_bundle do
-  rails_command("importmap:install")
-  rails_command("turbo:install")
-  rails_command("stimulus:install")
-  rails_command("tailwindcss:install")
+  # RSpec
   rails_command("generate rspec:install")
 
   # Devise
@@ -32,7 +16,6 @@ after_bundle do
   # end
 
   environment '# config.action_mailer.default_url_options = { host: "localhost", port: 3000 }', env: 'development'
-
 
   # High Voltage
   file 'app/views/pages/home.html.erb', <<-CODE
@@ -53,17 +36,25 @@ after_bundle do
   CODE
 
   # Readme
-  file 'app/components/foo.rb', <<-CODE
-    "#
+  run "rm README.md"
+
+  file 'README.md', <<-CODE
+    "# Hello World!"
   CODE
+
+  # Database
+  rails_command("db:drop")
+  rails_command("db:create")
+  rails_command("db:migrate")
+  rails_command("db:seed")
 
   # Git
   inject_into_file '.gitignore' do
     "\n# Hidden system files\n.DS_Store"
   end
 
-  # git add: "."
-  # git commit: "-a -m 'Initial commit'"
+  git add: "."
+  git commit: "-a -m 'Initial commit'"
 
   run "code ."
   run "open http://localhost:3000"

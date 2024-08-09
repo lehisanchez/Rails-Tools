@@ -1,4 +1,8 @@
 -d postgresql
---minimal
+--css=tailwind
+--skip-action-mailbox
+--skip-action-text
+--skip-docker
 --skip-test
+--skip-system-test
 -m ~/Code/Rails/template.rb
