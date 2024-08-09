@@ -1,0 +1,1 @@
+# Rails Default Template
