@@ -39,13 +39,13 @@ gem: --no-document
 Then update the gem system:
 
 ```shell
-  gem update --system
+gem update --system
 ```
 
 Install the latest Bundler and Rails:
 
 ```shell
-  gem install bundler rails
+gem install bundler rails
 ```
 
 ## Rails Config File (.railsrc)
