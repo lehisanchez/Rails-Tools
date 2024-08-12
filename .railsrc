@@ -2,12 +2,12 @@
 --css=tailwind
 --asset-pipeline=propshaft
 
---main
---skip-docker
---skip-action-mailbox
---skip-action-text
 --skip-test
 --skip-system-test
+--skip-action-text
+--skip-action-mailbox
 --skip-decrypted-diffs
+
+--devcontainer
 
 --template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
