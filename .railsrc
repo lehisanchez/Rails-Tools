@@ -3,7 +3,6 @@
 --asset-pipeline=propshaft
 
 --skip-test
---skip-system-test
 --skip-action-text
 --skip-action-mailbox
 --skip-decrypted-diffs
