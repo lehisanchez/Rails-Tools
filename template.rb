@@ -28,12 +28,7 @@ initializer 'enable_uuid.rb',  <<-CODE.strip_heredoc
   end
 CODE
 
-# TIMEZONE
-# initializer 'timestamps.rb', <<-CODE
-#   active_record/connection_adapters/postgresql_adapter.rb"
-#   ActiveRecord::ConnectionAdapters::PostgreSQLAdapter::NATIVE_DATABASE_TYPES[:datetime] = {    name: "timestamptz"  }
-# CODE
-
+# Time Formats
 initializer 'time_formats.rb', <<-CODE.strip_heredoc
   # Jan 01, 2023
   Date::DATE_FORMATS[:short] = "%b %d, %Y"
@@ -52,16 +47,21 @@ initializer 'time_formats.rb', <<-CODE.strip_heredoc
 CODE
 
 # =========================================================
-# MISC
+# Rubocop
 # =========================================================
-remove_file('README.md')
-create_file('README.md')
+remove_file('.rubocop.yml')
+
+file '.rubocop.yml', <<-CODE.strip_heredoc
+  inherit_gem: { rubocop-rails-omakase: rubocop.yml }
+
+  Layout/SpaceInsideArrayLiteralBrackets:
+    Enabled: false
+CODE
 
 # =========================================================
 # AFTER BUNDLE
 # =========================================================
 after_bundle do
-
   run 'clear'
 
   app_name = ask("What do you want to call your app?")
@@ -91,6 +91,8 @@ after_bundle do
 
     # Deployment
     gem "puma", ">= 5.0"
+    gem "thruster"
+    gem "kamal"
 
     # Authentication
     gem "devise", "~> 4.9"
@@ -132,6 +134,11 @@ after_bundle do
       adapter: postgresql
       encoding: unicode
       pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+      <% if ENV["DB_HOST"] %>
+      host: <%= ENV["DB_HOST"] %>
+      username: postgres
+      password: postgres
+      <% end %>
 
     development:
       <<: *default
@@ -149,10 +156,18 @@ after_bundle do
   CODE
 
   # =========================================================
+  # README.md
+  # =========================================================
+  remove_file('README.md')
+
+  file 'README.md', <<-CODE.strip_heredoc
+    # #{app_name.capitalize}
+  CODE
+
+  # =========================================================
   # GIT
   # =========================================================
   inject_into_file '.gitignore' do <<-CODE.strip_heredoc
-
       # Hidden system files
       .DS_Store
     CODE
@@ -169,7 +184,6 @@ after_bundle do
   # =======================================================
   environment "config.action_mailer.default_url_options = { host: \"localhost\", port: 3000 }", env: "development"
   environment 'config.active_record.record_timestamps = false'
-  # environment 'ActiveRecord::Base.time_zone_aware_types << :timestamptz'
 
   # =======================================================
   # GENERATORS
@@ -235,5 +249,4 @@ after_bundle do
   # =======================================================
 
   run 'code .'
-
 end

@@ -77,19 +77,16 @@ touch ~/.railsrc
 Add the following to ~/.railsrc
 
 ```yaml
---main
-
 --database=postgresql
 --css=tailwind
 --asset-pipeline=propshaft
 
---skip-bundle
---skip-jbuilder
---skip-action-mailbox
---skip-action-text
 --skip-test
---skip-system-test
+--skip-action-text
+--skip-action-mailbox
 --skip-decrypted-diffs
+
+--devcontainer
 
 --template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
 ```
