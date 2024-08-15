@@ -1,12 +1,14 @@
 # =========================================================
 # GEMS
 # =========================================================
-# gem "devise", "~> 4.9"
+gem "devise", "~> 4.9"
+gem "kamal"
+gem "thruster"
 
-# gem_group :development, :test do
-#   gem "foreman", "~> 0.88.1"
-#   gem "rspec-rails", "~> 6.1.0"
-# end
+gem_group :development, :test do
+  gem "foreman"
+  gem "rspec-rails", "~> 6.1.0"
+end
 
 # =========================================================
 # INITIALIZERS
@@ -99,16 +101,16 @@ after_bundle do
 
     # Other
     gem "jbuilder"
-    gem "bootsnap", require: false
+    gem "bootsnap"
     gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 
     group :development, :test do
-      gem "brakeman", require: false
+      gem "brakeman"
       gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
-      gem "foreman", require: false
-      gem "rspec-rails", "~> 6.1.0", require: false
-      gem "rubocop-rails-omakase", require: false
+      gem "foreman"
+      gem "rspec-rails", "~> 6.1.0"
+      gem "rubocop-rails-omakase"
     end
 
     group :development do
@@ -168,6 +170,7 @@ after_bundle do
   # GIT
   # =========================================================
   inject_into_file '.gitignore' do <<-CODE.strip_heredoc
+      \n
       # Hidden system files
       .DS_Store
     CODE
@@ -214,6 +217,7 @@ after_bundle do
   # =======================================================
   # Credentials
   # =======================================================
+
   run 'clear'
 
   puts <<-CODE.strip_heredoc
@@ -222,9 +226,9 @@ after_bundle do
   Add the following to credentials:
 
   db:
-    database:
-    username:
-    password:
+    database: #{app_name.downcase}
+    username: postgres
+    password: postgres
 
   =================================
 
