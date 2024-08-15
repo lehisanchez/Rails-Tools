@@ -6,8 +6,11 @@ gem "kamal"
 gem "thruster"
 
 gem_group :development, :test do
-  gem "foreman"
   gem "rspec-rails", "~> 6.1.0"
+end
+
+gem_group :development do
+  gem "rails_live_reload"
 end
 
 # =========================================================
@@ -108,12 +111,12 @@ after_bundle do
     group :development, :test do
       gem "brakeman"
       gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
-      gem "foreman"
       gem "rspec-rails", "~> 6.1.0"
       gem "rubocop-rails-omakase"
     end
 
     group :development do
+      gem "rails_live_reload"
       gem "web-console"
     end
 

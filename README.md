@@ -1,45 +1,67 @@
-# Rails Applications
+# Ruby on Rails Development
 
-My default workflow for starting a Ruby on Rails application.
+My environment and workflow for Ruby on Rails application development.
 
-## Requirements
+## Software
 
-Install the latest ruby version and set it as global using rbenv via brew. See [https://github.com/rbenv/](https://github.com/rbenv/rbenv).
+- [Download Visual Studio Code](https://code.visualstudio.com/download)
+- [Download GitKraken](https://www.gitkraken.com/download)
+- [Download pgAdmin](https://www.pgadmin.org/download/)
+- [Download Docker](https://www.docker.com/products/docker-desktop/)
+- [Download MySQL Workbench](https://dev.mysql.com/downloads/workbench/)
+- [Install Brew](https://brew.sh/)
+- [Install Oh My Zsh](https://ohmyz.sh/)
+- [Download Inconsolata for Powerline (font)](https://github.com/powerline/fonts/tree/master/Inconsolata)
 
-### Install rust (for YJIT)
+## Environment
 
-```shell
+### Ruby
+
+If we want to take advantage of YJIT in Ruby, we need to install Rust.
+
+```bash
 brew install rust
 ```
 
-### Install rbenv
+#### rbenv
 
 ```shell
 brew install ruby-build
 ```
 
-### Install Ruby
-
 ```shell
 rbenv init
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install #{RUBY_VERSION}
-rbenv global #{RUBY_VERSION}
+```
+
+#### Install Ruby 3.3.4 (or latest version)
+
+```shell
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.3.4
+```
+
+#### Set the global Ruby
+
+```shell
+rbenv global 3.3.4
+```
+
+```shell
 rbenv rehash
 ```
 
-Check the installation
+#### Check the installation
 
 ```shell
 ruby -v --yjit
 ```
 
-You should see something like:
+#### You should see:
 
 ```shell
 ruby 3.3.4 (2024-07-09 revision be1089c8ec) +YJIT [arm64-darwin23]
 ```
 
-### Configure Ruby Gems
+### Ruby Environment
 
 Create a .gemrc file. See [https://guides.rubygems.org/](https://guides.rubygems.org/command-reference/#gem-environment).
 
@@ -47,26 +69,26 @@ Create a .gemrc file. See [https://guides.rubygems.org/](https://guides.rubygems
 touch ~/.gemrc
 ```
 
-Then add the following:
+Paste in the following:
 
-```yaml
+```text
 gem: --no-document
 :backtrace: true
 ```
 
-Then update the gem system:
+Update the gem system.
 
 ```shell
 gem update --system
 ```
 
-Install the latest Bundler and Rails:
+### Install Bundler and Rails
 
 ```shell
 gem install bundler rails
 ```
 
-## Rails Config File (.railsrc)
+## Ruby on Rails
 
 Create a Rails config file:
 
@@ -76,7 +98,7 @@ touch ~/.railsrc
 
 Add the following to ~/.railsrc
 
-```yaml
+```text
 --database=postgresql
 --css=tailwind
 --asset-pipeline=propshaft
