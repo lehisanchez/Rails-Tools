@@ -225,6 +225,10 @@ after_bundle do
   git add: "."
   git commit: "-a -m 'Initial commit'"
 
+  # =======================================================
+  # 1Password ~ Save master.key to 1Password
+  # =======================================================
+  # https://developer.1password.com/docs/cli/reference/
 
   # =======================================================
   # OPEN
