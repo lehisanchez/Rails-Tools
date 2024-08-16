@@ -113,12 +113,6 @@ Add the following to ~/.railsrc
 --template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
 ```
 
-## Usage
-
-```shell
-rails new myapp
-```
-
 ## Postgresql
 
 ```shell
@@ -133,6 +127,11 @@ echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
 echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
 ```
 
+## Usage
+
+```shell
+rails new myapp
+```
 ## What does this template do?
 
 ## Recommendations
