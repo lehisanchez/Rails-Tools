@@ -208,7 +208,7 @@ after_bundle do
 
   # Edit UUID migration file
   inject_into_file Dir.glob("db/migrate/*_enable_uuid.rb").first, after: "def change\n" do <<-CODE
-    enable_extension 'pgcrypto'
+    enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
   CODE
   end
 
