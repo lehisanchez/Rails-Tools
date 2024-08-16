@@ -26,7 +26,7 @@ brew install rust
 #### rbenv
 
 ```shell
-brew install ruby-build
+brew install rbenv
 ```
 
 ```shell
@@ -117,6 +117,20 @@ Add the following to ~/.railsrc
 
 ```shell
 rails new myapp
+```
+
+## Postgresql
+
+```shell
+brew install postgresql@16 libpq
+```
+
+```shell
+echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+```
+
+```shell
+echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
 ```
 
 ## What does this template do?
