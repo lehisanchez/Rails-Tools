@@ -4,13 +4,21 @@
 gem "devise", "~> 4.9"
 gem "kamal"
 gem "thruster"
+gem "nanoid", "~> 2.0"
 
 gem_group :development, :test do
+  gem "faker"
+  gem "factory_bot_rails"
   gem "rspec-rails", "~> 6.1.0"
 end
 
 gem_group :development do
   gem "rails_live_reload"
+end
+
+gem_group :test do
+  gem "capybara"
+  gem "selenium-webdriver"
 end
 
 # =========================================================
@@ -64,6 +72,58 @@ file '.rubocop.yml', <<-CODE.strip_heredoc
 CODE
 
 # =========================================================
+# Factory Bot
+# =========================================================
+file 'spec/support/factory_bot.rb', <<-CODE.strip_heredoc
+  RSpec.configure do |config|
+    config.include FactoryBot::Syntax::Methods
+  end
+CODE
+
+
+
+# =========================================================
+# Nanoid
+# =========================================================
+file 'app/models/concerns/public_id_generator.rb', <<-CODE.strip_heredoc
+  require "nanoid"
+
+  module PublicIdGenerator
+    extend ActiveSupport::Concern
+
+    included do
+      before_create :set_public_id
+    end
+
+    PUBLIC_ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
+    PUBLIC_ID_LENGTH = 12
+    MAX_RETRY = 1000
+
+    PUBLIC_ID_REGEX = /[#{PUBLIC_ID_ALPHABET}]{#{PUBLIC_ID_LENGTH}}\z/
+
+    class_methods do
+      def generate_nanoid(alphabet: PUBLIC_ID_ALPHABET, size: PUBLIC_ID_LENGTH)
+        Nanoid.generate(size: size, alphabet: alphabet)
+      end
+    end
+
+    # Generates a random string for us as the public ID.
+    def set_public_id
+      return if public_id.present?
+      MAX_RETRY.times do
+        self.public_id = generate_public_id
+        return unless self.class.where(public_id: public_id).exists?
+      end
+      raise "Failed to generate a unique public id after \#{MAX_RETRY} attempts"
+    end
+
+    def generate_public_id
+      self.class.generate_nanoid(alphabet: PUBLIC_ID_ALPHABET)
+    end
+  end
+CODE
+
+# =========================================================
 # AFTER BUNDLE
 # =========================================================
 after_bundle do
@@ -106,10 +166,13 @@ after_bundle do
     gem "jbuilder"
     gem "bootsnap"
     gem "tzinfo-data", platforms: %i[ windows jruby ]
+    gem "nanoid", "~> 2.0"
 
     group :development, :test do
       gem "brakeman"
       gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+      gem "faker"
+      gem "factory_bot_rails"
       gem "rspec-rails", "~> 6.1.0"
       gem "rubocop-rails-omakase"
     end
