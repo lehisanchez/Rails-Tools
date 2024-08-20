@@ -107,7 +107,6 @@ after_bundle do
     gem "bootsnap"
     gem "tzinfo-data", platforms: %i[ windows jruby ]
 
-
     group :development, :test do
       gem "brakeman"
       gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -189,7 +188,11 @@ after_bundle do
   # APPLICATION SETTINGS
   # =======================================================
   environment "config.action_mailer.default_url_options = { host: \"localhost\", port: 3000 }", env: "development"
-  environment 'config.active_record.record_timestamps = false'
+  environment "config.active_record.record_timestamps = false"
+  environment "config.generators.system_tests = nil"   # generate system tests
+  environment "config.generators.assets false"         # create assets when generating a scaffold
+  environment "config.generators.helper false"         # generate helpers
+  environment "config.generators.stylesheets false"    # generate stylesheets
 
   # =======================================================
   # GENERATORS
