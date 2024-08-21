@@ -132,6 +132,92 @@ echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
 ```shell
 rails new myapp
 ```
-## What does this template do?
+
+# What does this template do?
+
+This template customizes the `rails new MYAPP` command and gives the developer options to install and tweak the application settings.
+
+## Add Gems
+
+```Ruby
+gem "devise", "~> 4.9"
+gem "kamal"
+gem "thruster"
+gem "nanoid", "~> 2.0"
+gem "image_processing", ">= 1.2"
+
+gem_group :development, :test do
+  gem "faker"
+  gem "factory_bot_rails"
+  gem "rspec-rails", "~> 6.1.0"
+end
+
+gem_group :development do
+  gem "rails_live_reload"
+end
+
+gem_group :test do
+  gem "capybara"
+  gem "selenium-webdriver"
+end
+```
+
+### Gems List
+
+- Devise (Authentication)
+- Kamal (Deployment)
+- Thruster (HTTP)
+- Nanoid (Shorter alternative to UUID)
+- Image Processing (Image variation processing for Active Storage)
+- Faker (Test Data/Fixtures)
+- Factory Bot (Test Factories)
+- RSpec (Testing Framework)
+- Capybara (Testing Tool)
+- Selenium Webdriver (Testing Tool)
+
+
+## Initializer: Enable YJIT
+
+Adds the following to an initializer file to enable YJIT.
+
+```ruby
+if defined? RubyVM::YJIT.enable
+  Rails.application.config.after_initialize do
+    RubyVM::YJIT.enable
+  end
+end
+```
+
+## Initializer: UUID
+
+Sets the global default primary_key to UUID by creating an initializer file
+
+```ruby
+Rails.application.config.generators do |g|
+  g.orm :active_record, primary_key_type: :uuid
+end
+```
+
+## Initializer: Time Formats
+
+The app I'm currently working on relies on date formats. I didn't think it would hurt if I kept this in.
+
+```ruby
+# Jan 01, 2023
+Date::DATE_FORMATS[:short] = "%b %d, %Y"
+
+# Sunday, January 01, 2023
+Date::DATE_FORMATS[:long] = "%A, %B %d, %Y"
+
+# Jan 01, 2023 03:30 PM
+Time::DATE_FORMATS[:short] = "%b %d, %Y %I:%M %p"
+
+# Sunday, January 01, 2023 at 03:30 PM
+Time::DATE_FORMATS[:long] = "%A, %B %d, %Y at %I:%M %p"
+
+# Jan 01, 2023 at 03:30 PM
+Time::DATE_FORMATS[:nice] = "%b %d, %Y at %I:%M %p"
+```
+
 
 ## Recommendations
