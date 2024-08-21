@@ -5,6 +5,7 @@ gem "devise", "~> 4.9"
 gem "kamal"
 gem "thruster"
 gem "nanoid", "~> 2.0"
+gem "image_processing", ">= 1.2"
 
 gem_group :development, :test do
   gem "faker"
@@ -62,6 +63,16 @@ initializer 'time_formats.rb', <<-'RUBY'.strip_heredoc
   Time::DATE_FORMATS[:nice] = "%b %d, %Y at %I:%M %p"
 RUBY
 
+# =========================================================
+# Active Storage
+# =========================================================
+after_bundle do
+  run 'clear'
+  if yes?("Would you like to install Active Storage? (y/n):")
+    rails_command("active_storage:install")
+  end
+end
+
 # =======================================================
 # APP SETTINGS
 # =======================================================
@@ -101,12 +112,12 @@ end
 # =========================================================
 remove_file('.rubocop.yml')
 
-file '.rubocop.yml' do <<-CODE.strip_heredoc
+file '.rubocop.yml' do <<-EOF.strip_heredoc
   inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
   Layout/SpaceInsideArrayLiteralBrackets:
     Enabled: false
-  CODE
+  EOF
 end
 
 # =========================================================
@@ -171,7 +182,6 @@ after_bundle do
   # =======================================================
   # GEMFILE
   # =======================================================
-
   remove_file('Gemfile')
   remove_file('Gemfile.lock')
 
@@ -204,6 +214,7 @@ after_bundle do
     gem "bootsnap"
     gem "tzinfo-data", platforms: %i[ windows jruby ]
     gem "nanoid", "~> 2.0"
+    gem "image_processing", ">= 1.2"
 
     group :development, :test do
       gem "brakeman"
@@ -299,6 +310,26 @@ after_bundle do
   route 'root to: "pages#index"'
 
   # =======================================================
+  # RSpec Root Test
+  # =======================================================
+  gsub_file 'spec/requests/pages_spec.rb', 'GET /index', 'GET /'
+  gsub_file 'spec/requests/pages_spec.rb', 'get "/pages/index"', 'get root_path'
+
+  remove_file('spec/views/pages/index.html.tailwindcss_spec.rb')
+
+  file 'spec/views/pages/index.html.erb_spec.rb' do <<-'RUBY'.strip_heredoc
+    require 'rails_helper'
+
+    RSpec.describe "pages/index", type: :view do
+      it "displays the header" do
+        render
+        expect(rendered).to match /Pages#index/
+      end
+    end
+    RUBY
+  end
+
+  # =======================================================
   # Enable UUID
   # =======================================================
   generate(:migration, "EnableUUID")
@@ -345,16 +376,21 @@ after_bundle do
   # RUN RUBOCOP
   # =======================================================
   run 'bundle exec rubocop -a'
+  run 'bundle exec rspec'
 
   # =======================================================
   # GIT
   # =======================================================
-  git :init
-  git add: "."
-  git commit: "-a -m 'Initial commit'"
+  if yes?("Are you ready for the initial commit? (y/n):")
+    git :init
+    git add: "."
+    git commit: "-a -m 'Initial commit'"
+  end
 
   # =======================================================
   # OPEN
   # =======================================================
-  run "code ."
+  if yes?("Open the project in VS Code? (y/n):")
+    run "code ."
+  end
 end
