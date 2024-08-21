@@ -22,27 +22,30 @@ gem_group :test do
 end
 
 # =========================================================
-# INITIALIZERS
+# CREATE INITIALIZERS
 # =========================================================
 
 # YJIT
-initializer 'enable_yjit.rb', <<-CODE.strip_heredoc
+# =========================================================
+initializer 'enable_yjit.rb', <<-'RUBY'.strip_heredoc
   if defined? RubyVM::YJIT.enable
     Rails.application.config.after_initialize do
       RubyVM::YJIT.enable
     end
   end
-CODE
+RUBY
 
 # UUID
-initializer 'enable_uuid.rb',  <<-CODE.strip_heredoc
+# =========================================================
+initializer 'enable_uuid.rb', <<-'RUBY'.strip_heredoc
   Rails.application.config.generators do |g|
     g.orm :active_record, primary_key_type: :uuid
   end
-CODE
+RUBY
 
 # Time Formats
-initializer 'time_formats.rb', <<-CODE.strip_heredoc
+# =========================================================
+initializer 'time_formats.rb', <<-'RUBY'.strip_heredoc
   # Jan 01, 2023
   Date::DATE_FORMATS[:short] = "%b %d, %Y"
 
@@ -57,47 +60,86 @@ initializer 'time_formats.rb', <<-CODE.strip_heredoc
 
   # Jan 01, 2023 at 03:30 PM
   Time::DATE_FORMATS[:nice] = "%b %d, %Y at %I:%M %p"
-CODE
+RUBY
+
+# =======================================================
+# APP SETTINGS
+# =======================================================
+
+after_bundle do
+  # =====================================================
+  # ENVIRONMENT
+  # =====================================================
+  environment "config.generators.system_tests = nil" # Disables systems tests
+  environment "config.generators.assets false" # Disables asset generation during 'rails g scaffold'
+  environment "config.generators.helper false" # Disables helper
+  environment "config.generators.stylesheets false" # Disables stylesheets
+
+  # =====================================================
+  # Apply RuboCop autocorrection to "rails g" files
+  # =====================================================
+  application(nil, env: "development") do <<-'RUBY'.strip_heredoc
+    config.generators.after_generate do |files|
+      parsable_files = files.filter { |file| File.exist?(file) && file.end_with?(".rb") }
+      unless parsable_files.empty?
+        system("bundle exec rubocop -A --fail-level=E #{parsable_files.shelljoin}", exception: true)
+      end
+    end
+    RUBY
+  end
+
+  # =======================================================
+  # DEFAULT URL OPTIONS
+  # =======================================================
+  append_file 'config/environments/development.rb' do
+    "\nRails.application.routes.default_url_options = { host: \"localhost\", protocol: \"http\", port: 3000 }\n"
+  end
+end
 
 # =========================================================
 # Rubocop
 # =========================================================
 remove_file('.rubocop.yml')
 
-file '.rubocop.yml', <<-CODE.strip_heredoc
+file '.rubocop.yml' do <<-CODE.strip_heredoc
   inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
   Layout/SpaceInsideArrayLiteralBrackets:
     Enabled: false
-CODE
+  CODE
+end
 
 # =========================================================
 # Factory Bot
 # =========================================================
-file 'spec/support/factory_bot.rb', <<-CODE.strip_heredoc
-  RSpec.configure do |config|
-    config.include FactoryBot::Syntax::Methods
-  end
-CODE
+file 'spec/support/factory_bot.rb' do <<-'RUBY'.strip_heredoc
+    RSpec.configure do |config|
+      config.include FactoryBot::Syntax::Methods
+    end
+  RUBY
+end
 
 # =========================================================
 # Nanoid
 # =========================================================
-file 'app/models/concerns/public_id_generator.rb', <<-CODE.strip_heredoc
+file 'app/models/concerns/public_id_generator.rb' do <<-'RUBY'.strip_heredoc
   require "nanoid"
 
   module PublicIdGenerator
     extend ActiveSupport::Concern
 
     included do
-      before_create :set_public_id
+      class_attribute :public_id_size
+      self.public_id_size = PUBLIC_ID_LENGTH
+
+      before_validation :set_public_id
     end
 
     PUBLIC_ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
     PUBLIC_ID_LENGTH = 12
     MAX_RETRY = 1000
 
-    PUBLIC_ID_REGEX = /[#{PUBLIC_ID_ALPHABET}]{#{PUBLIC_ID_LENGTH}}\z/
+    PUBLIC_ID_REGEX = /[\#{PUBLIC_ID_ALPHABET}]{\#{PUBLIC_ID_LENGTH}}\\z/
 
     class_methods do
       def generate_nanoid(alphabet: PUBLIC_ID_ALPHABET, size: PUBLIC_ID_LENGTH)
@@ -116,27 +158,24 @@ file 'app/models/concerns/public_id_generator.rb', <<-CODE.strip_heredoc
     end
 
     def generate_public_id
-      self.class.generate_nanoid(alphabet: PUBLIC_ID_ALPHABET)
+      self.class.generate_nanoid(alphabet: PUBLIC_ID_ALPHABET, size: self.public_id_size)
     end
   end
-CODE
+  RUBY
+end
 
 # =========================================================
 # AFTER BUNDLE
 # =========================================================
 after_bundle do
-  run 'clear'
-
-  app_name = ask("What do you want to call your app?")
-
-  # =========================================================
+  # =======================================================
   # GEMFILE
-  # =========================================================
+  # =======================================================
 
   remove_file('Gemfile')
   remove_file('Gemfile.lock')
 
-  file 'Gemfile', <<-CODE.strip_heredoc
+  file 'Gemfile' do <<-'RUBY'.strip_heredoc
     source "https://rubygems.org"
 
     gem "rails", "~> 7.2.0"
@@ -184,7 +223,8 @@ after_bundle do
       gem "capybara"
       gem "selenium-webdriver"
     end
-  CODE
+    RUBY
+  end
 
   run 'bundle install'
 
@@ -192,51 +232,54 @@ after_bundle do
   # DATABASE
   # =========================================================
 
-  remove_file('config/database.yml')
+  inside 'config' do
+    remove_file 'database.yml'
 
-  file 'config/database.yml', <<-CODE.strip_heredoc
-    default: &default
-      adapter: postgresql
-      encoding: unicode
-      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-      <% if ENV["DB_HOST"] %>
-      host: <%= ENV["DB_HOST"] %>
-      username: postgres
-      password: postgres
-      <% end %>
+    create_file 'database.yml' do <<-CODE.strip_heredoc
+      default: &default
+        adapter: postgresql
+        encoding: unicode
+        pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+        <% if ENV["DB_HOST"] %>
+        host: <%= ENV["DB_HOST"] %>
+        username: postgres
+        password: postgres
+        <% end %>
 
-    development:
-      <<: *default
-      database: #{app_name.downcase}_development
+      development:
+        <<: *default
+        database: #{app_name.downcase}_development
 
-    test:
-      <<: *default
-      database: #{app_name.downcase}_test
+      test:
+        <<: *default
+        database: #{app_name.downcase}_test
 
-    production:
-      <<: *default
-      database: Rails.application.credentials.dig(:db, :database)
-      username: Rails.application.credentials.dig(:db, :username)
-      password: Rails.application.credentials.dig(:db, :password)
-  CODE
+      production:
+        <<: *default
+        database: Rails.application.credentials.dig(:db, :database)
+        username: Rails.application.credentials.dig(:db, :username)
+        password: Rails.application.credentials.dig(:db, :password)
+      CODE
+    end
+  end
 
   # =========================================================
   # README.md
   # =========================================================
   remove_file('README.md')
 
-  file 'README.md', <<-CODE.strip_heredoc
+  file 'README.md' do <<-EOF.strip_heredoc
     # #{app_name.capitalize}
-  CODE
+    EOF
+  end
 
   # =========================================================
   # GIT
   # =========================================================
-  inject_into_file '.gitignore' do <<-CODE.strip_heredoc
-      \n
-      # Hidden system files
-      .DS_Store
-    CODE
+  append_file '.gitignore' do <<-EOF.strip_heredoc
+    # Ignore hidden system files
+    .DS_Store
+    EOF
   end
 
   # =======================================================
@@ -244,16 +287,6 @@ after_bundle do
   # =======================================================
   rails_command("generate rspec:install")
   rails_command("generate devise:install")
-
-  # =======================================================
-  # APPLICATION SETTINGS
-  # =======================================================
-  environment "config.action_mailer.default_url_options = { host: \"localhost\", port: 3000 }", env: "development"
-  environment "config.active_record.record_timestamps = false" # Disables automatic timestamps
-  environment "config.generators.system_tests = nil" # Disables systems tests
-  environment "config.generators.assets false" # Disables asset generation during 'rails g scaffold'
-  environment "config.generators.helper false" # Disables helper
-  environment "config.generators.stylesheets false" # Disables stylesheets
 
   # =======================================================
   # GENERATORS
@@ -271,9 +304,9 @@ after_bundle do
   generate(:migration, "EnableUUID")
 
   # Edit UUID migration file
-  inject_into_file Dir.glob("db/migrate/*_enable_uuid.rb").first, after: "def change\n" do <<-CODE
+  inject_into_file Dir.glob("db/migrate/*_enable_uuid.rb").first, after: "def change\n" do <<-'RUBY'
     enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
-  CODE
+    RUBY
   end
 
   # =======================================================
@@ -287,21 +320,31 @@ after_bundle do
 
   run 'clear'
 
-  puts <<-CODE.strip_heredoc
+  puts <<-EOF.strip_heredoc
   =================================
 
   Add the following to credentials:
 
   db:
-    database: #{app_name.downcase}
-    username: postgres
-    password: postgres
+    database: YOUR_DATABASE
+    username: YOUR_USERNAME
+    password: YOUR_PASSWORD
 
   =================================
 
-  CODE
+  EOF
 
   run 'EDITOR="code --wait" rails credentials:edit' if yes?("Would you like to do that now? (y/n)")
+
+  # =======================================================
+  # 1Password ~ Save master.key to 1Password
+  # =======================================================
+  # https://developer.1password.com/docs/cli/reference/
+
+  # =======================================================
+  # RUN RUBOCOP
+  # =======================================================
+  run 'bundle exec rubocop -a'
 
   # =======================================================
   # GIT
@@ -311,13 +354,7 @@ after_bundle do
   git commit: "-a -m 'Initial commit'"
 
   # =======================================================
-  # 1Password ~ Save master.key to 1Password
-  # =======================================================
-  # https://developer.1password.com/docs/cli/reference/
-
-  # =======================================================
   # OPEN
   # =======================================================
-
-  run 'code .'
+  run "code ."
 end
