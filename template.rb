@@ -1,4 +1,12 @@
 # =========================================================
+# TEMPLATE VARIABLES
+# =========================================================
+#
+# This is where we ask the developer what tools to include
+# in the Rails application. Tools like authentication gems
+# or Active Storage, etc.
+
+# =========================================================
 # GEMS
 # =========================================================
 gem "devise", "~> 4.9"
@@ -28,25 +36,27 @@ end
 
 # YJIT
 # =========================================================
-initializer 'enable_yjit.rb', <<-'RUBY'.strip_heredoc
+initializer 'enable_yjit.rb' do <<-'RUBY'.strip_heredoc
   if defined? RubyVM::YJIT.enable
     Rails.application.config.after_initialize do
       RubyVM::YJIT.enable
     end
   end
-RUBY
+  RUBY
+end
 
 # UUID
 # =========================================================
-initializer 'enable_uuid.rb', <<-'RUBY'.strip_heredoc
+initializer 'enable_uuid.rb' do <<-'RUBY'.strip_heredoc
   Rails.application.config.generators do |g|
     g.orm :active_record, primary_key_type: :uuid
   end
-RUBY
+  RUBY
+end
 
 # Time Formats
 # =========================================================
-initializer 'time_formats.rb', <<-'RUBY'.strip_heredoc
+initializer 'time_formats.rb' do <<-'RUBY'.strip_heredoc
   # Jan 01, 2023
   Date::DATE_FORMATS[:short] = "%b %d, %Y"
 
@@ -61,7 +71,8 @@ initializer 'time_formats.rb', <<-'RUBY'.strip_heredoc
 
   # Jan 01, 2023 at 03:30 PM
   Time::DATE_FORMATS[:nice] = "%b %d, %Y at %I:%M %p"
-RUBY
+  RUBY
+end
 
 # =========================================================
 # Active Storage
