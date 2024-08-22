@@ -315,6 +315,13 @@ after_bundle do
   # =======================================================
   rails_command("generate controller Pages index --skip-routes")
 
+  remove_file('app/views/pages/index.html.erb')
+
+  file 'app/views/pages/index.html.erb' do <<-CODE.strip_heredoc
+    <h1 class="text-4xl font-bold">#{app_name.capitalize}</h1>
+    CODE
+  end
+
   # =======================================================
   # ROUTES
   # =======================================================
@@ -328,16 +335,16 @@ after_bundle do
 
   remove_file('spec/views/pages/index.html.tailwindcss_spec.rb')
 
-  file 'spec/views/pages/index.html.erb_spec.rb' do <<-'RUBY'.strip_heredoc
+  file 'spec/views/pages/index.html.erb_spec.rb' do <<-CODE.strip_heredoc
     require 'rails_helper'
 
     RSpec.describe "pages/index", type: :view do
       it "displays the header" do
         render
-        expect(rendered).to match /Pages#index/
+        expect(rendered).to match /#{app_name.capitalize}/
       end
     end
-    RUBY
+    CODE
   end
 
   # =======================================================
