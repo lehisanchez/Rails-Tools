@@ -113,8 +113,8 @@ after_bundle do
   # =======================================================
   # DEFAULT URL OPTIONS
   # =======================================================
-  append_file 'config/environments/development.rb' do
-    "\nRails.application.routes.default_url_options = { host: \"localhost\", protocol: \"http\", port: 3000 }\n"
+  inject_into_file "config/environments/development.rb", before: "\nRails.application.configure do" do
+    "\nRails.application.routes.default_url_options = { host: \"localhost\", protocol: \"http\" }\n"
   end
 end
 
@@ -298,10 +298,8 @@ after_bundle do
   # =========================================================
   # GIT
   # =========================================================
-  append_file '.gitignore' do <<-EOF.strip_heredoc
-    # Ignore hidden system files
-    .DS_Store
-    EOF
+  append_file '.gitignore' do
+    "\n# Ignore hidden system files\n.DS_Store"
   end
 
   # =======================================================
@@ -399,6 +397,9 @@ after_bundle do
   # =======================================================
   # GIT
   # =======================================================
+
+  run 'clear'
+
   if yes?("Are you ready for the initial commit? (y/n):")
     git :init
     git add: "."
@@ -408,7 +409,14 @@ after_bundle do
   # =======================================================
   # OPEN
   # =======================================================
+
+  run 'clear'
+
   if yes?("Open the project in VS Code? (y/n):")
     run "code ."
   end
+end
+
+def do_something
+  puts "Hello World!"
 end
