@@ -33,16 +33,16 @@ brew install rbenv
 rbenv init
 ```
 
-#### Install Ruby 3.3.4 (or latest version)
+#### Install Ruby 3.3.6 (or latest version)
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.3.4
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.3.6
 ```
 
 #### Set the global Ruby
 
 ```shell
-rbenv global 3.3.4
+rbenv global 3.3.6
 ```
 
 ```shell
@@ -55,10 +55,10 @@ rbenv rehash
 ruby -v --yjit
 ```
 
-#### You should see:
+#### You should see something like:
 
 ```shell
-ruby 3.3.4 (2024-07-09 revision be1089c8ec) +YJIT [arm64-darwin23]
+ruby 3.3.6 (2024-11-05 revision 75015d4c1f) +YJIT [arm64-darwin23]
 ```
 
 ### Ruby Environment
