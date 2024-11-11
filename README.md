@@ -17,6 +17,8 @@ My environment and workflow for Ruby on Rails application development.
 
 ### Ruby
 
+#### Prerequisites
+
 If we want to take advantage of YJIT in Ruby, we need to install Rust.
 
 ```bash
@@ -61,7 +63,7 @@ ruby -v --yjit
 ruby 3.3.6 (2024-11-05 revision 75015d4c1f) +YJIT [arm64-darwin23]
 ```
 
-### Ruby Environment
+### Ruby Gems
 
 Create a .gemrc file. See [https://guides.rubygems.org/](https://guides.rubygems.org/command-reference/#gem-environment).
 
@@ -82,7 +84,7 @@ Update the gem system.
 gem update --system
 ```
 
-### Install Bundler and Rails
+#### Install Bundler and Rails
 
 ```shell
 gem install bundler rails
@@ -99,14 +101,7 @@ touch ~/.railsrc
 Add the following to ~/.railsrc
 
 ```text
---database=postgresql
 --css=tailwind
---asset-pipeline=propshaft
-
---skip-test
---skip-action-text
---skip-action-mailbox
---skip-decrypted-diffs
 
 --devcontainer
 
@@ -114,6 +109,8 @@ Add the following to ~/.railsrc
 ```
 
 ## Postgresql
+
+I might be removing this if I'm convinced SQLite will be sufficient for most of my projects.
 
 ```shell
 brew install postgresql@16 libpq
@@ -190,6 +187,8 @@ end
 
 ## Initializer: UUID
 
+_For PostgreSQL_
+
 Sets the global default primary_key to UUID by creating an initializer file
 
 ```ruby
@@ -218,6 +217,3 @@ Time::DATE_FORMATS[:long] = "%A, %B %d, %Y at %I:%M %p"
 # Jan 01, 2023 at 03:30 PM
 Time::DATE_FORMATS[:nice] = "%b %d, %Y at %I:%M %p"
 ```
-
-
-## Recommendations
