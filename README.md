@@ -2,7 +2,7 @@
 
 My environment and workflow for Ruby on Rails application development.
 
-## Software
+## Software & Tools
 
 - [Download Visual Studio Code](https://code.visualstudio.com/download)
 - [Download GitKraken](https://www.gitkraken.com/download)
@@ -13,11 +13,9 @@ My environment and workflow for Ruby on Rails application development.
 - [Install Oh My Zsh](https://ohmyz.sh/)
 - [Download Inconsolata for Powerline (font)](https://github.com/powerline/fonts/tree/master/Inconsolata)
 
-## Environment
+## Ruby Environment
 
-### Ruby
-
-#### Prerequisites
+### Prerequisites
 
 If we want to take advantage of YJIT in Ruby, we need to install Rust.
 
@@ -25,7 +23,7 @@ If we want to take advantage of YJIT in Ruby, we need to install Rust.
 brew install rust
 ```
 
-#### rbenv
+### Install rbenv
 
 ```shell
 brew install rbenv
@@ -35,13 +33,11 @@ brew install rbenv
 rbenv init
 ```
 
-#### Install Ruby 3.3.6 (or latest version)
+### Install Ruby with YJIT enabled
 
 ```shell
 RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.3.6
 ```
-
-#### Set the global Ruby
 
 ```shell
 rbenv global 3.3.6
@@ -51,19 +47,21 @@ rbenv global 3.3.6
 rbenv rehash
 ```
 
-#### Check the installation
+### Check the installation
 
 ```shell
 ruby -v --yjit
 ```
 
-#### You should see something like:
+**You should see something like:**
 
 ```shell
 ruby 3.3.6 (2024-11-05 revision 75015d4c1f) +YJIT [arm64-darwin23]
 ```
 
-### Ruby Gems
+## Ruby Gem Environment
+
+### Configure .gemrc
 
 Create a .gemrc file. See [https://guides.rubygems.org/](https://guides.rubygems.org/command-reference/#gem-environment).
 
@@ -84,13 +82,13 @@ Update the gem system.
 gem update --system
 ```
 
-#### Install Bundler and Rails
+### Install Bundler and Rails
 
 ```shell
 gem install bundler rails
 ```
 
-## Ruby on Rails
+## Ruby on Rails Environment
 
 Create a Rails config file:
 
@@ -102,13 +100,11 @@ Add the following to ~/.railsrc
 
 ```text
 --css=tailwind
-
 --devcontainer
-
 --template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
 ```
 
-## Postgresql
+## Postgresql Environment
 
 I might be removing this if I'm convinced SQLite will be sufficient for most of my projects.
 
@@ -124,56 +120,9 @@ echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
 echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
 ```
 
-## Usage
+## Rails Application Environment
 
-```shell
-rails new myapp
-```
-
-# What does this template do?
-
-This template customizes the `rails new MYAPP` command and gives the developer options to install and tweak the application settings.
-
-## Add Gems
-
-```Ruby
-gem "devise", "~> 4.9"
-gem "kamal"
-gem "thruster"
-gem "nanoid", "~> 2.0"
-gem "image_processing", ">= 1.2"
-
-gem_group :development, :test do
-  gem "faker"
-  gem "factory_bot_rails"
-  gem "rspec-rails", "~> 6.1.0"
-end
-
-gem_group :development do
-  gem "rails_live_reload"
-end
-
-gem_group :test do
-  gem "capybara"
-  gem "selenium-webdriver"
-end
-```
-
-### Gems List
-
-- Devise (Authentication)
-- Kamal (Deployment)
-- Thruster (HTTP)
-- Nanoid (Shorter alternative to UUID)
-- Image Processing (Image variation processing for Active Storage)
-- Faker (Test Data/Fixtures)
-- Factory Bot (Test Factories)
-- RSpec (Testing Framework)
-- Capybara (Testing Tool)
-- Selenium Webdriver (Testing Tool)
-
-
-## Initializer: Enable YJIT
+### Initializer: Enable YJIT
 
 Adds the following to an initializer file to enable YJIT.
 
@@ -185,7 +134,7 @@ if defined? RubyVM::YJIT.enable
 end
 ```
 
-## Initializer: UUID
+### Initializer: UUID
 
 _For PostgreSQL_
 
@@ -197,7 +146,7 @@ Rails.application.config.generators do |g|
 end
 ```
 
-## Initializer: Time Formats
+### Initializer: Time Formats
 
 The app I'm currently working on relies on date formats. I didn't think it would hurt if I kept this in.
 
