@@ -36,11 +36,11 @@ rbenv init
 ### Install Ruby with YJIT enabled
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.3.6
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.4
 ```
 
 ```shell
-rbenv global 3.3.6
+rbenv global 3.4.4
 ```
 
 ```shell
@@ -56,7 +56,7 @@ ruby -v --yjit
 **You should see something like:**
 
 ```shell
-ruby 3.3.6 (2024-11-05 revision 75015d4c1f) +YJIT [arm64-darwin23]
+ruby 3.4.4 (2025-05-14 revision a38531fd3f) +YJIT +PRISM
 ```
 
 ## Ruby Gem Environment
@@ -106,7 +106,7 @@ Add the following to ~/.railsrc
 
 ## Postgresql Environment
 
-I might be removing this if I'm convinced SQLite will be sufficient for most of my projects.
+I will more than likely switch to SQLite once I figure out the best practice for backing up SQLite databases.
 
 ```shell
 brew install postgresql@16 libpq
