@@ -36,7 +36,7 @@ rbenv init
 ### Install Ruby with YJIT enabled
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.4
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.5
 ```
 
 ```shell
