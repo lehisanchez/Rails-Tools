@@ -40,7 +40,7 @@ RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.4
 ```
 
 ```shell
-rbenv global 3.4.4
+rbenv global 3.4.5
 ```
 
 ```shell
@@ -56,7 +56,7 @@ ruby -v --yjit
 **You should see something like:**
 
 ```shell
-ruby 3.4.4 (2025-05-14 revision a38531fd3f) +YJIT +PRISM
+ruby 3.4.5 (2025-05-14 revision a38531fd3f) +YJIT +PRISM
 ```
 
 ## Ruby Gem Environment
@@ -101,7 +101,7 @@ Add the following to ~/.railsrc
 ```text
 --css=tailwind
 --devcontainer
---template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
+--template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
 ```
 
 ## Postgresql Environment
