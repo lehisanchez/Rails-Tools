@@ -8,6 +8,7 @@
 # GEMS
 # =========================================================
 gem "bundler-audit"
+gem "lograge"
 gem_group :development, :test do
   gem "dotenv-rails"
 end
