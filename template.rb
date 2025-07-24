@@ -7,7 +7,7 @@
 # =========================================================
 # GEMS
 # =========================================================
-gem_group :development do
+gem_group :development, :test do
   gem "dotenv-rails"
 end
 
