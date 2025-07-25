@@ -4,11 +4,22 @@
 # Updated: 2025-07-23
 # =========================================================
 
+run 'clear'
+include_auth = false
+
 # =========================================================
 # GEMS
 # =========================================================
+if yes?("Would you like to add Omniauth? (y/n):")
+  include_auth = true
+  gem "omniauth"
+  gem "omniauth-rails_csrf_protection"
+  gem "omniauth-entra-id"
+end
+
 gem "bundler-audit"
 gem "lograge"
+
 gem_group :development, :test do
   gem "dotenv-rails"
 end
@@ -28,27 +39,76 @@ file '.env.development' do
   CODE
 end
 
+file '.env.development.local' do
+  <<-CODE.strip_heredoc
+  DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_development
+  CODE
+end
+
 file '.env.test' do
   <<-CODE.strip_heredoc
   DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_test
   CODE
 end
 
-append_file '.gitignore' do
+file '.env.test.local' do
   <<-CODE.strip_heredoc
-  # The .env file is read for both dev and test
-  # and creates more problems than it solves, so
-  # we never ever want to use it
-  .env
-
-  # .env.*.local files are where we put actual
-  # secrets we need for dev and test, so
-  # we really don't want them in version control
-  .env.*.local
-
-  # Ignore hidden system files
-  .DS_Store
+  DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_test
   CODE
+end
+
+unless include_auth == false
+  append_file '.env.development' do
+    <<-CODE.strip_heredoc
+    AUTH_PROVIDER_ID=123456
+    AUTH_PROVIDER_SECRET=123456
+    AUTH_PROVIDER_TENANT_ID=123456
+    CODE
+  end
+
+  append_file '.env.development.local' do
+    <<-CODE.strip_heredoc
+    AUTH_PROVIDER_ID=123456
+    AUTH_PROVIDER_SECRET=123456
+    AUTH_PROVIDER_TENANT_ID=123456
+    CODE
+  end
+
+  append_file '.env.test' do
+    <<-CODE.strip_heredoc
+    AUTH_PROVIDER_ID=123456
+    AUTH_PROVIDER_SECRET=123456
+    AUTH_PROVIDER_TENANT_ID=123456
+    CODE
+  end
+
+  append_file '.env.test.local' do
+    <<-CODE.strip_heredoc
+    AUTH_PROVIDER_ID=123456
+    AUTH_PROVIDER_SECRET=123456
+    AUTH_PROVIDER_TENANT_ID=123456
+    CODE
+  end
+end
+
+after_bundle do
+  append_file '.gitignore' do
+    <<-CODE.strip_heredoc
+
+    # The .env file is read for both dev and test
+    # and creates more problems than it solves, so
+    # we never ever want to use it
+    .env
+
+    # .env.*.local files are where we put actual
+    # secrets we need for dev and test, so
+    # we really don't want them in version control
+    .env.*.local
+
+    # Ignore hidden system files
+    .DS_Store
+    CODE
+  end
 end
 
 # =========================================================
