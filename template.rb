@@ -91,6 +91,45 @@ unless include_auth == false
   end
 end
 
+file 'bin/ci' do
+  <<-'RUBY'.strip_heredoc
+  #!/usr/bin/env bash
+
+  set -e
+
+  if [ "${1}" = -h ]     || \
+    [ "${1}" = --help ] || \
+    [ "${1}" = help ]; then
+    echo "Usage: ${0}"
+    echo
+    echo "Runs all tests, quality, and security checks"
+    exit
+  else
+    if [ ! -z "${1}" ]; then
+      echo "Unknown argument: '${1}'"
+      exit 1
+    fi
+  fi
+
+  echo "[ bin/ci ] Running unit tests"
+  bin/rails test
+
+  echo "[ bin/ci ] Running system tests"
+  bin/rails test:system
+
+  echo "[ bin/ci ] Analyzing code for security vulnerabilities."
+  echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
+  echo "[ bin/ci ] can be opened in your browser."
+  bundle exec brakeman -q -o tmp/brakeman.html
+
+  echo "[ bin/ci ] Analyzing Ruby gems for"
+  echo "[ bin/ci ] security vulnerabilities"
+  bundle exec bundle audit check --update
+
+  echo "[ bin/ci ] Done"
+  RUBY
+end
+
 after_bundle do
   append_file '.gitignore' do
     <<-CODE.strip_heredoc
