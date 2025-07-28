@@ -18,6 +18,7 @@ if yes?("Would you like to add Omniauth? (y/n):")
 end
 
 gem "bundler-audit"
+
 gem "lograge"
 
 gem_group :development, :test do
