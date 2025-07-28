@@ -208,3 +208,10 @@ initializer 'enable_yjit.rb' do
   end
   RUBY
 end
+
+# DOTENV
+initializer 'dotenv.rb' do
+  <<-'RUBY'.strip_heredoc
+  Dotenv.require_keys("DATABASE_URL")
+  RUBY
+end
