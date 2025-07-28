@@ -30,6 +30,7 @@ end
 remove_file('config/database.yml')
 remove_file('config/credentials.yml.enc')
 remove_file('config/master.key')
+remove_file('README.md')
 
 # https://anti-pattern.com/strip-leading-whitespace-from-heredocs-in-ruby
 
@@ -128,6 +129,49 @@ file 'bin/ci' do
 
   echo "[ bin/ci ] Done"
   RUBY
+end
+
+file 'README.md' do
+  <<-CODE.strip_heredoc
+  # #{app_name}
+
+  ## Setup
+
+  1. Pull down the app from version control
+  2. Create .env files with database and client secrets
+
+  ```bash
+  echo "DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_development" > .env.development
+  ```
+  ```bash
+  echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_development" > .env.development.local
+  ```
+  ```bash
+  echo "DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_test" > .env.test
+  ```
+  ```bash
+  echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_test" > .env.test.local
+  ```
+
+  3. Make sure you have Postgres installed and running
+  4. Run `bin/setup` to install dependencies and set up the database
+  5. Run `bin/ci` to run tests, quality, and security checks
+
+  ## Running The Application
+
+  1. Run `bin/dev` to start the application in development mode
+
+  ## Tests and CI
+
+  1. Run `bin/ci` to run all tests, quality, and security checks
+  2. `tmp/test.log` will use production logging format *not* the development one.
+  3. The vulnerability check output will be in `tmp/brakeman.html`, which can be opened in your browser
+
+  ## Production
+
+  * All runtime configuration should be supplied in the UNIX environment.
+  * Rails logging uses Semantic Logging with Prefab.
+  CODE
 end
 
 after_bundle do
