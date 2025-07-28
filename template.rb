@@ -1,18 +1,22 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE
 # Author: Lehi Sanchez
-# Updated: 2025-07-23
+# Updated: 2025-07-28
 # =========================================================
 
-run 'clear'
-
 # =========================================================
-# QUESTIONS
+# CUSTOMIZATIONS
 # =========================================================
 if yes?("Would you like to add Omniauth? (y/n):")
   skip_authentication = false
 else
   skip_authentication = true
+end
+
+if yes?("Would you like to add RSpec (y/n):")
+  skip_rspec = false
+else
+  skip_rspec = true
 end
 
 # =========================================================
@@ -32,7 +36,7 @@ gem "prefab-cloud-ruby"
 
 gem_group :development, :test do
   gem "dotenv-rails"
-  gem "rspec-rails", "~> 8.0.0"
+  gem "rspec-rails", "~> 8.0.0" unless skip_rspec
 end
 
 gem_group :development do
@@ -126,33 +130,6 @@ unless skip_authentication
   end
 end
 
-file 'README.md' do <<-EOF.strip_heredoc
-  # #{app_name.capitalize}
-
-  ## Setup
-
-  1. Pull down the app from version control
-  2. Make sure you have Postgres installed and running
-  3. Run `bin/setup` to install dependencies and set up the database
-  4. Run `bin/ci` to run tests, quality, and security checks
-
-  ## Running The Application
-
-  1. Run `bin/dev` to start the application in development mode
-
-  ## Tests and CI
-
-  1. Run `bin/ci` to run all tests, quality, and security checks
-  2. `tmp/test.log` will use production logging format *not* the development one.
-  3. The vulnerability check output will be in `tmp/brakeman.html`, which can be opened in your browser
-
-  ## Production
-
-  * All runtime configuration should be supplied in the UNIX environment.
-  * Rails logging uses Semantic Logging with Prefab.
-  EOF
-end
-
 
 # =========================================================
 # BIN FILES
@@ -177,8 +154,11 @@ file 'bin/ci' do
     fi
   fi
 
-  echo "[ bin/ci ] Running tests"
-  bundle exec rspec
+  echo "[ bin/ci ] Running unit tests"
+  bin/rails test
+
+  echo "[ bin/ci ] Running system tests"
+  bin/rails test:system
 
   echo "[ bin/ci ] Analyzing code for security vulnerabilities."
   echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
@@ -189,16 +169,13 @@ file 'bin/ci' do
   echo "[ bin/ci ] security vulnerabilities"
   bundle exec bundle audit check --update
 
-  echo "[ bin/ci ] Analyzing code quality with RuboCop"
-  bundle exec rubocop -a
-
   echo "[ bin/ci ] Done"
   RUBY
 end
 
 file 'README.md' do
   <<-CODE.strip_heredoc
-  # #{app_name}
+  # #{app_name.capitalize}
 
   ## Setup
 
@@ -242,6 +219,14 @@ end
 # =========================================================
 # INITIALIZERS
 # =========================================================
+
+# config/initializers/dotenv.rb
+initializer 'dotenv.rb' do
+  <<-'RUBY'.strip_heredoc
+  Dotenv.require_keys("DATABASE_URL")
+  RUBY
+end
+
 
 # config/initializers/enable_yjit.rb
 initializer 'enable_yjit.rb' do
@@ -295,7 +280,6 @@ after_bundle do
   # ===========================
   # ENVIRONMENT CONFIGURATION
   # ===========================
-  environment "config.generators.system_tests = nil"  # Disables systems tests
   environment "config.generators.assets false"        # Disables asset generation during 'rails g scaffold'
   environment "config.generators.helper false"        # Disables helper
   environment "config.generators.stylesheets false"   # Disables stylesheets
@@ -324,16 +308,9 @@ after_bundle do
   # ===========================
   # INSTALLERS
   # ===========================
-  rails_command("generate rspec:install")
+  rails_command("generate rspec:install") unless skip_rspec
   rails_command("generate authentication") unless skip_authentication
   run("bundle install")
   run("bundle exec bin/setup --skip-server")
   run("bundle exec bin/ci")
-end
-
-# DOTENV
-initializer 'dotenv.rb' do
-  <<-'RUBY'.strip_heredoc
-  Dotenv.require_keys("DATABASE_URL")
-  RUBY
 end
