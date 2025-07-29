@@ -1,7 +1,7 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE
 # Author: Lehi Sanchez
-# Updated: 2025-07-28
+# Updated: 2025-07-29
 # =========================================================
 
 # =========================================================
@@ -56,56 +56,35 @@ remove_file('README.md')
 # =========================================================
 # .ENV FILES
 # =========================================================
-file '.aprc' do
-  <<-'RUBY'.strip_heredoc
-  AwesomePrint.defaults = {
-    :indent => -2,
-    :color => {
-      :hash  => :pale,
-      :class => :white
-    }
-  }
-  RUBY
-end
-
 file '.env.development' do
   <<-CODE.strip_heredoc
-  DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_development
-  CODE
-end
-
-file '.env.development.local' do
-  <<-CODE.strip_heredoc
-  DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_development
+  DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_development
   CODE
 end
 
 file '.env.test' do
   <<-CODE.strip_heredoc
-  DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_test
+  DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_test
+  CODE
+end
+
+file '.env.development.local' do
+  <<-CODE.strip_heredoc
+  DB_HOST="localhost"
   CODE
 end
 
 file '.env.test.local' do
   <<-CODE.strip_heredoc
-  DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_test
+  DB_HOST="localhost"
   CODE
 end
-
 
 # =========================================================
 # AUTHENTICATION .ENV FILES
 # =========================================================
 unless skip_authentication
   append_file '.env.development' do
-    <<-CODE.strip_heredoc
-    AUTH_CLIENT_ID=123456
-    AUTH_CLIENT_SECRET=123456
-    AUTH_TENANT_ID=123456
-    CODE
-  end
-
-  append_file '.env.development.local' do
     <<-CODE.strip_heredoc
     AUTH_CLIENT_ID=123456
     AUTH_CLIENT_SECRET=123456
@@ -120,16 +99,7 @@ unless skip_authentication
     AUTH_TENANT_ID=123456
     CODE
   end
-
-  append_file '.env.test.local' do
-    <<-CODE.strip_heredoc
-    AUTH_CLIENT_ID=123456
-    AUTH_CLIENT_SECRET=123456
-    AUTH_TENANT_ID=123456
-    CODE
-  end
 end
-
 
 # =========================================================
 # BIN FILES
@@ -183,16 +153,19 @@ file 'README.md' do
   2. Create .env files with database and client secrets
 
   ```bash
-  echo "DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_development" > .env.development
+  echo "DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_development" > .env.development
   ```
+
   ```bash
-  echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_development" > .env.development.local
+  echo "DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_test" > .env.test
   ```
+
   ```bash
-  echo "DATABASE_URL=postgres://postgres:postgres@postgres:5432/#{app_name.downcase}_test" > .env.test
+  echo 'DB_HOST="localhost"' > .env.development.local
   ```
+
   ```bash
-  echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/#{app_name.downcase}_test" > .env.test.local
+  echo 'DB_HOST="localhost"' > .env.test.local
   ```
 
   3. Make sure you have Postgres installed and running
@@ -226,7 +199,6 @@ initializer 'dotenv.rb' do
   Dotenv.require_keys("DATABASE_URL")
   RUBY
 end
-
 
 # config/initializers/enable_yjit.rb
 initializer 'enable_yjit.rb' do
@@ -270,7 +242,6 @@ unless skip_authentication
     RUBY
   end
 end
-
 
 # =======================================================
 # APP SETTINGS
