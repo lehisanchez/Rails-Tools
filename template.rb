@@ -22,13 +22,6 @@ end
 # =========================================================
 # GEMS
 # =========================================================
-
-unless skip_authentication
-  gem "omniauth"
-  gem "omniauth-rails_csrf_protection"
-  gem "omniauth-entra-id"
-end
-
 gem "bundler-audit"
 gem "amazing_print"
 gem "rails_semantic_logger"
@@ -36,12 +29,30 @@ gem "prefab-cloud-ruby"
 
 gem_group :development, :test do
   gem "dotenv-rails"
-  gem "rspec-rails", "~> 8.0.0" unless skip_rspec
 end
 
 gem_group :development do
   gem "rails_live_reload"
 end
+
+# =========================================================
+# APPLICATION CONFIGURATION
+# =========================================================
+environment <<-RUBY
+  config.generators do |generator|
+    generator.assets false
+    generator.helper false
+    generator.stylesheets false
+  end
+RUBY
+
+# =========================================================
+# ROUTES
+# =========================================================
+
+# =========================================================
+# MODELS
+# =========================================================
 
 # =========================================================
 # FILES
@@ -189,6 +200,99 @@ file 'README.md' do
   CODE
 end
 
+# ===========================
+# .GITIGNORE
+# ===========================
+append_file '.gitignore' do
+  <<-CODE.strip_heredoc
+
+  # The .env file is read for both dev and test
+  # and creates more problems than it solves, so
+  # we never ever want to use it
+  .env
+
+  # .env.*.local files are where we put actual
+  # secrets we need for dev and test, so
+  # we really don't want them in version control
+  .env.*.local
+
+  # Ignore hidden system files
+  .DS_Store
+  CODE
+end
+
+# =========================================================
+# AUTHENTICATION
+# =========================================================
+unless skip_authentication
+  gem "omniauth"
+  gem "omniauth-rails_csrf_protection"
+  gem "omniauth-entra-id"
+
+  gem_group :development, :test do
+    gem "rspec-rails", "~> 8.0.0"
+  end
+
+  route "get \"/auth/:provider/callback\" => \"sessions/omni_auths#create\", as: :omniauth_callback"
+  route "get \"/auth/failure\" => \"sessions/omni_auths#failure\", as: :omniauth_failure"
+
+  file 'app/controllers/sessions/omni_auths_controller.rb' do
+    <<-CODE.strip_heredoc
+    # app/controllers/sessions/omni_auths_controller.rb
+
+    class Sessions::OmniAuthsController < ApplicationController
+      allow_unauthenticated_access only: [ :create, :failure ]
+
+      def create
+        auth = request.env["omniauth.auth"]
+        uid = auth["uid"]
+        provider = auth["provider"]
+        redirect_path = request.env["omniauth.params"]&.dig("origin") || root_path
+
+        identity = OmniAuthIdentity.find_by(uid: uid, provider: provider)
+        if authenticated?
+          # User is signed in so they are trying to link an identity with their account
+          if identity.nil?
+            # No identity was found, create a new one for this user
+            OmniAuthIdentity.create(uid: uid, provider: provider, user: Current.user)
+            # Give the user model the option to update itself with the new information
+            Current.user.signed_in_with_oauth(auth)
+            redirect_to redirect_path, notice: "Account linked!"
+          else
+            # Identity was found, nothing to do
+            # Check relation to current user
+            if Current.user == identity.user
+              redirect_to redirect_path, notice: "Already linked that account!"
+            else
+              # The identity is not associated with the current_user, illegal state
+              redirect_to redirect_path, notice: "Account mismatch, try signing out first!"
+            end
+          end
+        else
+          # Check if identity was found i.e. user has visited the site before
+          if identity.nil?
+            # New identity visiting the site, we are linking to an existing User or creating a new one
+            user = User.find_by(email_address: auth.info.email) || User.create_from_oauth(auth)
+            identity = OmniAuthIdentity.create(uid: uid, provider: provider, user: user)
+          end
+          start_new_session_for identity.user
+          redirect_to redirect_path, notice: "Signed in!"
+        end
+      end
+
+      def failure
+        redirect_to new_session_path, alert: "Authentication failed, please try again."
+      end
+    end
+    CODE
+  end
+
+  after_bundle do
+    rails_command("generate authentication")
+    rails_command("generate model OmniAuthIdentity uid:string provider:string user:references")
+  end
+end
+
 # =========================================================
 # INITIALIZERS
 # =========================================================
@@ -248,39 +352,7 @@ end
 # =======================================================
 
 after_bundle do
-  # ===========================
-  # ENVIRONMENT CONFIGURATION
-  # ===========================
-  environment "config.generators.assets false"        # Disables asset generation during 'rails g scaffold'
-  environment "config.generators.helper false"        # Disables helper
-  environment "config.generators.stylesheets false"   # Disables stylesheets
-
-  # ===========================
-  # .GITIGNORE
-  # ===========================
-  append_file '.gitignore' do
-    <<-CODE.strip_heredoc
-
-    # The .env file is read for both dev and test
-    # and creates more problems than it solves, so
-    # we never ever want to use it
-    .env
-
-    # .env.*.local files are where we put actual
-    # secrets we need for dev and test, so
-    # we really don't want them in version control
-    .env.*.local
-
-    # Ignore hidden system files
-    .DS_Store
-    CODE
-  end
-
-  # ===========================
-  # INSTALLERS
-  # ===========================
-  rails_command("generate rspec:install") unless skip_rspec
-  rails_command("generate authentication") unless skip_authentication
+  # rails_command("generate rspec:install") unless skip_rspec
   run("bundle install")
   run("bundle exec bin/setup --skip-server")
   run("bundle exec bin/ci")
