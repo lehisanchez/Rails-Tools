@@ -100,6 +100,7 @@ Add the following to ~/.railsrc
 
 ```text
 --css=tailwind
+--database=postgresql
 --devcontainer
 --template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
 ```
