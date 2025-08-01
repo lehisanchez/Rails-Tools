@@ -218,6 +218,7 @@ append_file '.gitignore' do
 
   # Ignore hidden system files
   .DS_Store
+  Thumbs.db
   CODE
 end
 
