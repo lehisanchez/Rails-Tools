@@ -1,12 +1,4 @@
---database=postgresql
 --css=tailwind
---asset-pipeline=propshaft
-
---skip-test
---skip-action-text
---skip-action-mailbox
---skip-decrypted-diffs
-
+--database=postgresql
 --devcontainer
-
---template=https://raw.githubusercontent.com/lehisanchez/Rails/main/template.rb
+--template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
