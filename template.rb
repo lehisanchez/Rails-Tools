@@ -5,18 +5,12 @@
 # =========================================================
 
 # =========================================================
-# CUSTOMIZATIONS
+# QUESTIONS
 # =========================================================
-if yes?("Would you like to add Omniauth? (y/n):")
+if yes?("Would you like to add authentication? (y/n):")
   skip_authentication = false
 else
   skip_authentication = true
-end
-
-if yes?("Would you like to add RSpec (y/n):")
-  skip_rspec = false
-else
-  skip_rspec = true
 end
 
 # =========================================================
@@ -230,17 +224,11 @@ unless skip_authentication
   gem "omniauth-rails_csrf_protection"
   gem "omniauth-entra-id"
 
-  gem_group :development, :test do
-    gem "rspec-rails", "~> 8.0.0"
-  end
-
   route "get \"/auth/:provider/callback\" => \"sessions/omni_auths#create\", as: :omniauth_callback"
   route "get \"/auth/failure\" => \"sessions/omni_auths#failure\", as: :omniauth_failure"
 
   file 'app/controllers/sessions/omni_auths_controller.rb' do
-    <<-CODE.strip_heredoc
-    # app/controllers/sessions/omni_auths_controller.rb
-
+    <<-'RUBY'.strip_heredoc
     class Sessions::OmniAuthsController < ApplicationController
       allow_unauthenticated_access only: [ :create, :failure ]
 
@@ -285,12 +273,13 @@ unless skip_authentication
         redirect_to new_session_path, alert: "Authentication failed, please try again."
       end
     end
-    CODE
+    RUBY
   end
 
   after_bundle do
     rails_command("generate authentication")
     rails_command("generate model OmniAuthIdentity uid:string provider:string user:references")
+    rails_command("generate migration AddSourceToSessions source:string")
   end
 end
 
@@ -301,7 +290,7 @@ end
 # config/initializers/dotenv.rb
 initializer 'dotenv.rb' do
   <<-'RUBY'.strip_heredoc
-  Dotenv.require_keys("DATABASE_URL")
+  Dotenv.require_keys("DATABASE_URL", "DB_HOST")
   RUBY
 end
 
@@ -338,9 +327,9 @@ unless skip_authentication
       provider(
         :entra_id,
         {
-          client_id:      ENV['AUTH_CLIENT_ID'],
-          client_secret:  ENV['AUTH_CLIENT_SECRET'],
-          tenant_id:      ENV['AUTH_TENANT_ID']
+          client_id:      ENV['ENTRA_CLIENT_ID'],
+          client_secret:  ENV['ENTRA_CLIENT_SECRET'],
+          tenant_id:      ENV['ENTRA_TENANT_ID']
         }
       )
     end
