@@ -1,7 +1,7 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE
 # Author: Lehi Sanchez
-# Updated: 2025-07-29
+# Updated: 2025-08-25
 # =========================================================
 
 # =========================================================
@@ -55,6 +55,7 @@ remove_file('config/database.yml')
 remove_file('config/credentials.yml.enc')
 remove_file('config/master.key')
 remove_file('README.md')
+run("mv bin/setup bin/setup.sample")
 
 # https://anti-pattern.com/strip-leading-whitespace-from-heredocs-in-ruby
 
@@ -86,29 +87,57 @@ file '.env.test.local' do
 end
 
 # =========================================================
-# AUTHENTICATION .ENV FILES
-# =========================================================
-unless skip_authentication
-  append_file '.env.development' do
-    <<-CODE.strip_heredoc
-    AUTH_CLIENT_ID=123456
-    AUTH_CLIENT_SECRET=123456
-    AUTH_TENANT_ID=123456
-    CODE
-  end
-
-  append_file '.env.test' do
-    <<-CODE.strip_heredoc
-    AUTH_CLIENT_ID=123456
-    AUTH_CLIENT_SECRET=123456
-    AUTH_TENANT_ID=123456
-    CODE
-  end
-end
-
-# =========================================================
 # BIN FILES
 # =========================================================
+file 'bin/setup' do
+  <<-'RUBY'.strip_heredoc
+  #!/usr/bin/env ruby
+  require "fileutils"
+
+  APP_ROOT = File.expand_path("..", __dir__)
+
+  def system!(*args)
+    system(*args, exception: true)
+  end
+
+  def log(message)
+    puts "[ bin/setup ] #{message}"
+  end
+
+  FileUtils.chdir APP_ROOT do
+    # This script is a way to set up or update your development environment automatically.
+    # This script is idempotent, so that you can run it at any time and get an expectable outcome.
+    # Add necessary setup steps to this file.
+
+    log "Installing gems"
+    # Only do bundle install if the much-faster
+    # bundle check indicates we need to
+    system("bundle check") || system!("bundle install")
+
+    log "Dropping & recreating the development database"
+    # Note that the very first time this runs, db:reset
+    # will fail, but this failure is fixed by
+    # doing a db:migrate
+    system! "bin/rails db:reset || bin/rails db:migrate"
+
+    log "Dropping & recreating the test database"
+    # Setting the RAILS_ENV explicitly to be sure
+    # we actually reset the test database
+    system!({ "RAILS_ENV" => "test" }, "bin/rails db:reset || bin/rails db:migrate")
+
+    log "Removing old logs and tempfiles"
+    system! "bin/rails log:clear tmp:clear"
+
+    unless ARGV.include?("--skip-server")
+      log "Starting development server"
+      STDOUT.flush # flush the output before exec(2) so that it displays
+      exec "bin/dev"
+    end
+  end
+
+  RUBY
+end
+
 file 'bin/ci' do
   <<-'RUBY'.strip_heredoc
   #!/usr/bin/env bash
@@ -220,72 +249,72 @@ end
 # AUTHENTICATION
 # =========================================================
 unless skip_authentication
+  # Gems
+  # =========================================
   gem "omniauth"
   gem "omniauth-rails_csrf_protection"
   gem "omniauth-entra-id"
 
+  # Routes
+  # =========================================
   route "get \"/auth/:provider/callback\" => \"sessions/omni_auths#create\", as: :omniauth_callback"
   route "get \"/auth/failure\" => \"sessions/omni_auths#failure\", as: :omniauth_failure"
 
-  file 'app/controllers/sessions/omni_auths_controller.rb' do
-    <<-'RUBY'.strip_heredoc
-    class Sessions::OmniAuthsController < ApplicationController
-      allow_unauthenticated_access only: [ :create, :failure ]
-
-      def create
-        auth = request.env["omniauth.auth"]
-        uid = auth["uid"]
-        provider = auth["provider"]
-        redirect_path = request.env["omniauth.params"]&.dig("origin") || root_path
-
-        identity = OmniAuthIdentity.find_by(uid: uid, provider: provider)
-        if authenticated?
-          # User is signed in so they are trying to link an identity with their account
-          if identity.nil?
-            # No identity was found, create a new one for this user
-            OmniAuthIdentity.create(uid: uid, provider: provider, user: Current.user)
-            # Give the user model the option to update itself with the new information
-            Current.user.signed_in_with_oauth(auth)
-            redirect_to redirect_path, notice: "Account linked!"
-          else
-            # Identity was found, nothing to do
-            # Check relation to current user
-            if Current.user == identity.user
-              redirect_to redirect_path, notice: "Already linked that account!"
-            else
-              # The identity is not associated with the current_user, illegal state
-              redirect_to redirect_path, notice: "Account mismatch, try signing out first!"
-            end
-          end
-        else
-          # Check if identity was found i.e. user has visited the site before
-          if identity.nil?
-            # New identity visiting the site, we are linking to an existing User or creating a new one
-            user = User.find_by(email_address: auth.info.email) || User.create_from_oauth(auth)
-            identity = OmniAuthIdentity.create(uid: uid, provider: provider, user: user)
-          end
-          start_new_session_for identity.user
-          redirect_to redirect_path, notice: "Signed in!"
-        end
-      end
-
-      def failure
-        redirect_to new_session_path, alert: "Authentication failed, please try again."
-      end
-    end
-    RUBY
+  # ENV Variables
+  # =========================================
+  append_file '.env.development' do
+    <<-CODE.strip_heredoc
+    ENTRA_CLIENT_ID=ENTRA_CLIENT_ID
+    ENTRA_CLIENT_SECRET=ENTRA_CLIENT_SECRET
+    ENTRA_TENANT_ID=ENTRA_TENANT_ID
+    CODE
   end
 
-  after_bundle do
-    rails_command("generate authentication")
-    rails_command("generate model OmniAuthIdentity uid:string provider:string user:references")
-    rails_command("generate migration AddSourceToSessions source:string")
+  append_file '.env.test' do
+    <<-CODE.strip_heredoc
+    ENTRA_CLIENT_ID=ENTRA_CLIENT_ID
+    ENTRA_CLIENT_SECRET=ENTRA_CLIENT_SECRET
+    ENTRA_TENANT_ID=ENTRA_TENANT_ID
+    CODE
+  end
+
+  # Initializers
+  # =========================================
+  # config/initializers/omniauth_providers.rb
+  initializer 'omniauth_providers.rb' do
+    <<-'RUBY'.strip_heredoc
+    Rails.application.config.middleware.use OmniAuth::Builder do
+      provider :developer if Rails.env.development? || Rails.env.test?
+      provider(
+        :entra_id,
+        {
+          client_id:      ENV['ENTRA_CLIENT_ID'],
+          client_secret:  ENV['ENTRA_CLIENT_SECRET'],
+          tenant_id:      ENV['ENTRA_TENANT_ID']
+        }
+      )
+    end
+    RUBY
   end
 end
 
 # =========================================================
 # INITIALIZERS
 # =========================================================
+
+# config/initializers/monkey_patch_activerecord.rb
+initializer 'monkey_patch_activerecord.rb' do
+  <<-'RUBY'.strip_heredoc
+  # The following is necessary to be able to drop a
+  # PostgreSQL database that has active connections
+  class ActiveRecord::Tasks::PostgreSQLDatabaseTasks
+    def drop
+      establish_connection(public_schema_config)
+      connection.execute "DROP DATABASE IF EXISTS \"#{db_config.database}\" WITH (FORCE)"
+    end
+  end
+  RUBY
+end
 
 # config/initializers/dotenv.rb
 initializer 'dotenv.rb' do
@@ -318,25 +347,6 @@ initializer 'logging.rb' do
   RUBY
 end
 
-# config/initializers/omniauth_providers.rb
-unless skip_authentication
-  initializer 'omniauth_providers.rb' do
-    <<-'RUBY'.strip_heredoc
-    Rails.application.config.middleware.use OmniAuth::Builder do
-      provider :developer if Rails.env.development? || Rails.env.test?
-      provider(
-        :entra_id,
-        {
-          client_id:      ENV['ENTRA_CLIENT_ID'],
-          client_secret:  ENV['ENTRA_CLIENT_SECRET'],
-          tenant_id:      ENV['ENTRA_TENANT_ID']
-        }
-      )
-    end
-    RUBY
-  end
-end
-
 # =======================================================
 # APP SETTINGS
 # =======================================================
@@ -346,4 +356,16 @@ after_bundle do
   run("bundle install")
   run("bundle exec bin/setup --skip-server")
   run("bundle exec bin/ci")
+  unless skip_authentication
+    rails_command("generate authentication")
+    rails_command("generate model OmniAuthIdentity uid:string provider:string user:references")
+    rails_command("generate migration AddSourceToSessions source:string")
+    rails_command("db:migrate")
+    rails_command("generate controller StaticPages home dashboard")
+    route "get \"dashboard\" => \"static_pages#dashboard\", as: :dashboard"
+    route "root \"static_pages#home\""
+    inject_into_file "app/controllers/static_pages_controller.rb", after: "class StaticPagesController < ApplicationController" do
+      "\nallow_unauthenticated_access only: %i[ home ]\n"
+    end
+  end
 end
