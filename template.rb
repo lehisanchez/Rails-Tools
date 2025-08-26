@@ -90,7 +90,7 @@ end
 # BIN FILES
 # =========================================================
 file 'bin/setup' do
-  <<-CODE.strip_heredoc
+  <<-'RUBY'.strip_heredoc
   #!/usr/bin/env ruby
   require "fileutils"
 
@@ -101,31 +101,13 @@ file 'bin/setup' do
   end
 
   def log(message)
-    puts "[ bin/setup ] \#{message}"
+    puts "[ bin/setup ] #{message}"
   end
 
   FileUtils.chdir APP_ROOT do
     # This script is a way to set up or update your development environment automatically.
     # This script is idempotent, so that you can run it at any time and get an expectable outcome.
     # Add necessary setup steps to this file.
-
-    log "Creating .env files if they don't exist"
-
-    unless File.exist?(".env.development")
-      File.write(".env.development", "DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_development")
-    end
-
-    unless File.exist?(".env.test")
-      File.write(".env.test", "DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_test")
-    end
-
-    unless File.exist?(".env.development.local")
-      File.write(".env.development.local", "DB_HOST=localhost")
-    end
-
-    unless File.exist?(".env.test.local")
-      File.write(".env.test.local", "DB_HOST=localhost")
-    end
 
     log "Installing gems"
     # Only do bundle install if the much-faster
@@ -152,7 +134,7 @@ file 'bin/setup' do
       exec "bin/dev"
     end
   end
-  CODE
+  RUBY
 end
 
 file 'bin/ci' do
