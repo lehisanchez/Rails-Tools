@@ -36,11 +36,11 @@ rbenv init
 ### Install Ruby with YJIT enabled
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.5
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.6
 ```
 
 ```shell
-rbenv global 3.4.5
+rbenv global 3.4.6
 ```
 
 ```shell
@@ -100,14 +100,13 @@ Add the following to ~/.railsrc
 
 ```text
 --css=tailwind
---database=postgresql
 --devcontainer
 --template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
 ```
 
 ## Postgresql Environment
 
-I will more than likely switch to SQLite once I figure out the best practice for backing up SQLite databases.
+_For when using Postgresql_
 
 ```shell
 brew install postgresql@16 libpq
