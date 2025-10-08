@@ -36,18 +36,18 @@ rbenv init
 ### Install Ruby with YJIT enabled
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.6
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.7
 ```
 
 ```shell
-rbenv global 3.4.6
+rbenv global 3.4.7
 ```
 
 ```shell
 rbenv rehash
 ```
 
-### Check the installation
+**Check the installation**
 
 ```shell
 ruby -v --yjit
@@ -56,7 +56,7 @@ ruby -v --yjit
 **You should see something like:**
 
 ```shell
-ruby 3.4.5 (2025-05-14 revision a38531fd3f) +YJIT +PRISM
+ruby 3.4.7 (2025-05-14 revision a38531fd3f) +YJIT +PRISM
 ```
 
 ## Ruby Gem Environment
