@@ -56,7 +56,7 @@ ruby -v --yjit
 **You should see something like:**
 
 ```shell
-ruby 3.4.7 (2025-05-14 revision a38531fd3f) +YJIT +PRISM
+ruby 3.4.7 (2025-10-08 revision 7a5688e2a2) +YJIT +PRISM
 ```
 
 ## Ruby Gem Environment
