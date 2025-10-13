@@ -1,22 +1,25 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE
 # Author: Lehi Sanchez
-# Updated: 2025-08-26
+# Updated: 2025-10-11
 # =========================================================
 
 # =========================================================
 # QUESTIONS
 # =========================================================
 SKIP_AUTHENTICATION         = yes?("Would you like to add authentication? (y/n):") ? false : true
-SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : ( yes?("Would you like to add OmniAuth (y/n)") ? false : true )
+SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : (yes?("Would you like to add OmniAuth (y/n)") ? false : true)
 SELECTED_OMNIAUTH_PROVIDER  = SKIP_OMNIAUTH ? "google" : ask("Which OmniAuth provider would you like to use? (entra/google/github):", default: "google", limited_to: %w[entra google github]).downcase
 SELECTED_DATABASE           = ask("Which database? (postgresql/mysql/sqlite3):", default: "sqlite3", limited_to: %w[postgresql mysql sqlite3]).downcase
 
+  # if ARGV.include?("-d sqlite3") || ARGV.include?("--database sqlite3") || ARGV.include?("--database=sqlite")
+  #   puts "\n== Using SQLITE3 =="
+  # end
 
-# =========================================================
-# GEMS
-# =========================================================
-def add_gems
+  # =========================================================
+  # GEMS
+  # =========================================================
+  # def add_gems
   gem "bundler-audit"
   gem "amazing_print"
   gem "rails_semantic_logger"
@@ -24,19 +27,23 @@ def add_gems
 
   gem_group :development, :test do
     gem "dotenv-rails"
+    gem "factory_bot_rails"
+    gem "faker"
+    gem "rspec-rails", "~> 8.0.0"
   end
 
   gem_group :development do
     gem "rails_live_reload"
   end
 
-  return if SKIP_OMNIAUTH
-  gem "omniauth"
-  gem "omniauth-rails_csrf_protection"
-  gem "omniauth-entra-id"       unless SELECTED_OMNIAUTH_PROVIDER != "entra"
-  gem "omniauth-google-oauth2"  unless SELECTED_OMNIAUTH_PROVIDER != "google"
-  gem "omniauth-github"         unless SELECTED_OMNIAUTH_PROVIDER != "github"
-end
+  unless SKIP_OMNIAUTH
+    gem "omniauth"
+    gem "omniauth-rails_csrf_protection"
+    gem "omniauth-entra-id"       unless SELECTED_OMNIAUTH_PROVIDER != "entra"
+    gem "omniauth-google-oauth2"  unless SELECTED_OMNIAUTH_PROVIDER != "google"
+    gem "omniauth-github"         unless SELECTED_OMNIAUTH_PROVIDER != "github"
+  end
+# end
 
 # =========================================================
 # AUTHENTICATION
@@ -94,6 +101,27 @@ def remove_files
   remove_file('config/master.key')
   remove_file('config/database.yml') unless SELECTED_DATABASE == "sqlite3"
   run("mv bin/setup bin/setup.sample")
+end
+
+# =========================================================
+# RSpec
+# =========================================================
+def add_rspec
+  rails_command("generate rspec:install")
+  gsub_file 'spec/rails_helper.rb', '# Rails.root.glob', 'Rails.root.glob'
+end
+
+# =========================================================
+# Factory Bot
+# =========================================================
+def add_factory_bot
+  file 'spec/support/factory_bot.rb' do
+    <<-CODE.strip_heredoc
+    RSpec.configure do |config|
+      config.include FactoryBot::Syntax::Methods
+    end
+    CODE
+  end
 end
 
 # =========================================================
@@ -235,11 +263,14 @@ def add_configurations
       fi
     fi
 
-    echo "[ bin/ci ] Running unit tests"
-    bin/rails test
+    echo "[ bin/ci ] Running RSpec tests"
+    bundle exec rspec
 
-    echo "[ bin/ci ] Running system tests"
-    bin/rails test:system
+    # echo "[ bin/ci ] Running unit tests"
+    # bin/rails test
+
+    # echo "[ bin/ci ] Running system tests"
+    # bin/rails test:system
 
     echo "[ bin/ci ] Analyzing code for security vulnerabilities."
     echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
@@ -355,9 +386,11 @@ end
 # =======================================================
 # APP SETTINGS
 # =======================================================
+# add_gems
+
 after_bundle do
-  add_gems
   add_configurations
+  add_rspec
   add_authentication unless SKIP_AUTHENTICATION
   add_readme
   run("bundle exec bin/setup --skip-server")
