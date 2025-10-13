@@ -1,4 +1,8 @@
 --css=tailwind
---database=postgresql
+--edge
 --devcontainer
---template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
+--skip-test
+--skip-system-test
+--skip-action-mailbox
+--skip-action-text
+# --template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
