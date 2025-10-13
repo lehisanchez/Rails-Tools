@@ -8,7 +8,7 @@
 # QUESTIONS
 # =========================================================
 SKIP_AUTHENTICATION         = yes?("Would you like to add authentication? (y/n):") ? false : true
-SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : (yes?("Would you like to add OmniAuth (y/n)") ? false : true)
+SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : ( yes?("Would you like to add OmniAuth (y/n)") ? false : true )
 SELECTED_OMNIAUTH_PROVIDER  = SKIP_OMNIAUTH ? "google" : ask("Which OmniAuth provider would you like to use? (entra/google/github):", default: "google", limited_to: %w[entra google github]).downcase
 SELECTED_DATABASE           = ask("Which database? (postgresql/mysql/sqlite3):", default: "sqlite3", limited_to: %w[postgresql mysql sqlite3]).downcase
 
