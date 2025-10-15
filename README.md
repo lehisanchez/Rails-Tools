@@ -105,7 +105,7 @@ Add the following to ~/.railsrc
 --template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
 ```
 
-## Postgresql Environment
+## Database
 
 _For when using Postgresql_
 
@@ -121,7 +121,20 @@ echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
 echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
 ```
 
-## Rails Application Environment
+## Rails Application
+
+### RSpec Testing
+
+### Factory Bot
+
+Add the following configuration to the RSpec support folder
+
+```ruby
+# spec/support/factory_bot.rb
+RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+end
+```
 
 ### Initializer: Enable YJIT
 
