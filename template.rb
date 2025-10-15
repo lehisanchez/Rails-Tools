@@ -1,59 +1,57 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE
 # Author: Lehi Sanchez
-# Updated: 2025-10-11
+# Updated: 2025-10-15
 # =========================================================
 
-# =========================================================
-# QUESTIONS
-# =========================================================
-SKIP_AUTHENTICATION         = yes?("Would you like to add authentication? (y/n):") ? false : true
-SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : ( yes?("Would you like to add OmniAuth (y/n)") ? false : true )
-SELECTED_OMNIAUTH_PROVIDER  = SKIP_OMNIAUTH ? "google" : ask("Which OmniAuth provider would you like to use? (entra/google/github):", default: "google", limited_to: %w[entra google github]).downcase
-SELECTED_DATABASE           = ask("Which database? (postgresql/mysql/sqlite3):", default: "sqlite3", limited_to: %w[postgresql mysql sqlite3]).downcase
 
-  # if ARGV.include?("-d sqlite3") || ARGV.include?("--database sqlite3") || ARGV.include?("--database=sqlite")
-  #   puts "\n== Using SQLITE3 =="
-  # end
-
-  # =========================================================
-  # GEMS
-  # =========================================================
-  # def add_gems
-  gem "bundler-audit"
-  gem "amazing_print"
-  gem "rails_semantic_logger"
-  gem "prefab-cloud-ruby"
-
-  gem_group :development, :test do
-    gem "dotenv-rails"
-    gem "factory_bot_rails"
-    gem "faker"
-    gem "rspec-rails", "~> 8.0.0"
-  end
-
-  gem_group :development do
-    gem "rails_live_reload"
-  end
-
-  unless SKIP_OMNIAUTH
-    gem "omniauth"
-    gem "omniauth-rails_csrf_protection"
-    gem "omniauth-entra-id"       unless SELECTED_OMNIAUTH_PROVIDER != "entra"
-    gem "omniauth-google-oauth2"  unless SELECTED_OMNIAUTH_PROVIDER != "google"
-    gem "omniauth-github"         unless SELECTED_OMNIAUTH_PROVIDER != "github"
-  end
-# end
 
 # =========================================================
-# AUTHENTICATION
+# CUSTOMIZATIONS
+# =========================================================
+SKIP_AUTHENTICATION         = yes?("Add authentication? (y/n):") ? false : true
+SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : ( yes?("Would you like to add OmniAuth? (y/n):") ? false : true )
+SELECTED_OMNIAUTH_PROVIDER  = SKIP_OMNIAUTH ? "google" : ask("Which OmniAuth provider would you like to use?:", default: "google", limited_to: %w[entra google github]).downcase
+SELECTED_DATABASE           = ask("Which database?:", default: "sqlite3", limited_to: %w[postgresql mysql sqlite3]).downcase
+
+
+
+# =========================================================
+# ADD GEMS
+# =========================================================
+gem "bundler-audit"
+gem "amazing_print"
+gem "rails_semantic_logger"
+gem "prefab-cloud-ruby"
+gem "rainbow"
+
+gem_group :development, :test do
+  gem "dotenv-rails"
+  gem "factory_bot_rails"
+  gem "faker"
+  gem "rspec-rails", "~> 8.0.0"
+end
+
+gem_group :development do
+  gem "rails_live_reload"
+end
+
+unless SKIP_OMNIAUTH
+  gem "omniauth"
+  gem "omniauth-rails_csrf_protection"
+  gem "omniauth-entra-id"       unless SELECTED_OMNIAUTH_PROVIDER != "entra"
+  gem "omniauth-google-oauth2"  unless SELECTED_OMNIAUTH_PROVIDER != "google"
+  gem "omniauth-github"         unless SELECTED_OMNIAUTH_PROVIDER != "github"
+end
+
+
+# =========================================================
+# ADD AUTHENTICATION
 # =========================================================
 def add_authentication
   rails_command("generate authentication")
-  rails_command("generate controller StaticPages home dashboard --skip-routes --no-test-framework")
-
+  rails_command("generate controller StaticPages home --skip-routes --no-test-framework")
   route 'root "static_pages#home"'
-  route 'get "dashboard" => "static_pages#dashboard", as: :dashboard'
 
   inject_into_file "app/controllers/static_pages_controller.rb", after: "class StaticPagesController < ApplicationController" do
     "\nallow_unauthenticated_access only: %i[ home ]\n"
@@ -73,7 +71,6 @@ def add_authentication
 
   rails_command("generate migration AddSourceToSessions source:string")
   rails_command("generate model OmniAuthIdentity uid:string provider:string user:references")
-
   route 'get "/auth/:provider/callback" => "sessions/omni_auths#create", as: :omniauth_callback'
   route 'get "/auth/failure" => "sessions/omni_auths#failure", as: :omniauth_failure'
 
@@ -95,6 +92,10 @@ def add_authentication
 end
 
 
+
+# =========================================================
+# MODIFY FILES
+# =========================================================
 def remove_files
   remove_file('README.md')
   remove_file('config/credentials.yml.enc')
@@ -103,16 +104,20 @@ def remove_files
   run("mv bin/setup bin/setup.sample")
 end
 
+
+
 # =========================================================
-# RSpec
+# INSTALL RSpec
 # =========================================================
 def add_rspec
   rails_command("generate rspec:install")
   gsub_file 'spec/rails_helper.rb', '# Rails.root.glob', 'Rails.root.glob'
 end
 
+
+
 # =========================================================
-# Factory Bot
+# Install Factory Bot
 # =========================================================
 def add_factory_bot
   file 'spec/support/factory_bot.rb' do
@@ -124,12 +129,12 @@ def add_factory_bot
   end
 end
 
+
+
 # =========================================================
 # APPLICATION CONFIGURATION
 # =========================================================
 def add_configurations
-  remove_files
-
   # config/application.rb
   # Disable generation of assets, helpers, and stylesheets
   # =========================================
@@ -163,10 +168,16 @@ def add_configurations
     CODE
   end
 
+
+
+  # =========================================
   # Create .env files
   # =========================================
   run("touch .env.development .env.test .env.development.local .env.test.local")
 
+  # =========================================
+  # Add Database Files
+  # =========================================
   unless SELECTED_DATABASE != "postegresql"
     file '.env.development' do
       <<-CODE.strip_heredoc
@@ -192,104 +203,19 @@ def add_configurations
       CODE
     end
   end
+end
 
-  # Add bin/setup and bin/ci
-  # =========================================
-  file 'bin/setup' do
-    <<-'RUBY'.strip_heredoc
-    #!/usr/bin/env ruby
-    require "fileutils"
 
-    APP_ROOT = File.expand_path("..", __dir__)
 
-    def system!(*args)
-      system(*args, exception: true)
-    end
+# ====================================================
+# Add Initializers
+# ====================================================
 
-    def log(message)
-      puts "[ bin/setup ] #{message}"
-    end
+def add_initializers
 
-    FileUtils.chdir APP_ROOT do
-      # This script is a way to set up or update your development environment automatically.
-      # This script is idempotent, so that you can run it at any time and get an expectable outcome.
-      # Add necessary setup steps to this file.
-
-      log "Installing gems"
-      # Only do bundle install if the much-faster
-      # bundle check indicates we need to
-      system("bundle check") || system!("bundle install")
-
-      log "Dropping & recreating the development database"
-      # Note that the very first time this runs, db:reset
-      # will fail, but this failure is fixed by
-      # doing a db:migrate
-      system! "bin/rails db:reset || bin/rails db:migrate"
-
-      log "Dropping & recreating the test database"
-      # Setting the RAILS_ENV explicitly to be sure
-      # we actually reset the test database
-      system!({ "RAILS_ENV" => "test" }, "bin/rails db:reset || bin/rails db:migrate")
-
-      log "Removing old logs and tempfiles"
-      system! "bin/rails log:clear tmp:clear"
-
-      unless ARGV.include?("--skip-server")
-        log "Starting development server"
-        STDOUT.flush # flush the output before exec(2) so that it displays
-        exec "bin/dev"
-      end
-    end
-    RUBY
-  end
-
-  file 'bin/ci' do
-    <<-'RUBY'.strip_heredoc
-    #!/usr/bin/env bash
-
-    set -e
-
-    if [ "${1}" = -h ]     || \
-      [ "${1}" = --help ] || \
-      [ "${1}" = help ]; then
-      echo "Usage: ${0}"
-      echo
-      echo "Runs all tests, quality, and security checks"
-      exit
-    else
-      if [ ! -z "${1}" ]; then
-        echo "Unknown argument: '${1}'"
-        exit 1
-      fi
-    fi
-
-    echo "[ bin/ci ] Running RSpec tests"
-    bundle exec rspec
-
-    # echo "[ bin/ci ] Running unit tests"
-    # bin/rails test
-
-    # echo "[ bin/ci ] Running system tests"
-    # bin/rails test:system
-
-    echo "[ bin/ci ] Analyzing code for security vulnerabilities."
-    echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
-    echo "[ bin/ci ] can be opened in your browser."
-    bundle exec brakeman -q -o tmp/brakeman.html
-
-    echo "[ bin/ci ] Analyzing Ruby gems for"
-    echo "[ bin/ci ] security vulnerabilities"
-    bundle exec bundle audit check --update
-
-    echo "[ bin/ci ] Done"
-    RUBY
-  end
-
-  run("chmod +x bin/setup bin/ci")
-
-  # Add Initializers
   # =========================================
   # config/initializers/omniauth_providers.rb
+  # =========================================
   initializer 'omniauth_providers.rb' do
     <<-'RUBY'.strip_heredoc
     Rails.application.config.middleware.use OmniAuth::Builder do
@@ -306,7 +232,10 @@ def add_configurations
     RUBY
   end unless SKIP_OMNIAUTH
 
+
+  # ================================================
   # config/initializers/monkey_patch_activerecord.rb
+  # ================================================
   initializer 'monkey_patch_activerecord.rb' do
     <<-'RUBY'.strip_heredoc
     # The following is necessary to be able to drop a
@@ -320,14 +249,20 @@ def add_configurations
     RUBY
   end unless SELECTED_DATABASE != "postgresql"
 
+
+  # =============================
   # config/initializers/dotenv.rb
+  # =============================
   initializer 'dotenv.rb' do
     <<-'RUBY'.strip_heredoc
     Dotenv.require_keys("DATABASE_URL", "DB_HOST")
     RUBY
   end unless SELECTED_DATABASE == "sqlite3"
 
+
+  # ==================================
   # config/initializers/enable_yjit.rb
+  # ==================================
   initializer 'enable_yjit.rb' do
     <<-'RUBY'.strip_heredoc
     if defined? RubyVM::YJIT.enable
@@ -338,7 +273,10 @@ def add_configurations
     RUBY
   end
 
+
+  # ==============================
   # config/initializers/logging.rb
+  # ==============================
   initializer 'logging.rb' do
     <<-'RUBY'.strip_heredoc
     SemanticLogger.sync!                                  # Use synchronsous processing for targeting logging with current context
@@ -352,6 +290,92 @@ def add_configurations
   end
 end
 
+
+
+# =========================================================
+# ADD SETUP FILE
+# =========================================================
+def add_setup
+  file 'bin/setup' do
+    <<-'RUBY'.strip_heredoc
+    #!/usr/bin/env ruby
+    require "fileutils"
+    require "rainbow/refinement"
+
+    using Rainbow
+
+    APP_ROOT = File.expand_path("..", __dir__)
+
+    def system!(*args)
+      system(*args, exception: true)
+    end
+
+    FileUtils.chdir APP_ROOT do
+      # This script is a way to set up or update your development environment automatically.
+      # This script is idempotent, so that you can run it at any time and get an expectable outcome.
+      # Add necessary setup steps to this file.
+      puts "Installing gems".blue.bright
+      # Only do bundle install if the much-faster
+      # bundle check indicates we need to
+      system("bundle check") || system!("bundle install")
+
+      puts "Dropping & recreating the development database".blue.bright
+      # Note that the very first time this runs, db:reset
+      # will fail, but this failure is fixed by
+      # doing a db:migrate
+      system! "bin/rails db:reset || bin/rails db:migrate"
+
+      puts "Dropping & recreating the test database".blue.bright
+      # Setting the RAILS_ENV explicitly to be sure
+      # we actually reset the test database
+      system!({ "RAILS_ENV" => "test" }, "bin/rails db:reset || bin/rails db:migrate")
+
+      puts "Removing old logs and tempfiles".blue.bright
+      system! "bin/rails log:clear tmp:clear"
+
+      puts "Done!".blue.bright
+    end
+    RUBY
+  end
+
+  run("chmod +x bin/setup")
+end
+
+
+
+# =========================================================
+# ADD CI FILE
+# =========================================================
+def add_ci
+  file 'bin/ci' do
+    <<-CODE.strip_heredoc
+    #!/usr/bin/env bash
+
+    set -e
+
+    echo "[ bin/ci ] Running RSpec tests"
+    bundle exec rspec
+
+    echo "[ bin/ci ] Analyzing code for security vulnerabilities."
+    echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
+    echo "[ bin/ci ] can be opened in your browser."
+    bundle exec brakeman -q -o tmp/brakeman.html
+
+    echo "[ bin/ci ] Analyzing Ruby Gems"
+    bundle exec bundle audit check --update
+
+    echo "[ bin/ci ] Done"
+    CODE
+  end
+
+  run("chmod +x bin/ci")
+end
+
+
+
+# =========================================================
+# ADD README FILE
+# =========================================================
 def add_readme
   file 'README.md' do
     <<-CODE.strip_heredoc
@@ -384,14 +408,16 @@ def add_readme
 end
 
 # =======================================================
-# APP SETTINGS
+# AFTER BUNDLE
 # =======================================================
-# add_gems
-
 after_bundle do
+  remove_files
   add_configurations
+  add_initializers
   add_rspec
   add_authentication unless SKIP_AUTHENTICATION
+  add_setup
+  add_ci
   add_readme
   run("bundle exec bin/setup --skip-server")
   run("bundle exec bin/ci")
