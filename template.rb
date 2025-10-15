@@ -12,7 +12,7 @@
 SKIP_AUTHENTICATION         = yes?("Add authentication? (y/n):") ? false : true
 SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : ( yes?("Would you like to add OmniAuth? (y/n):") ? false : true )
 SELECTED_OMNIAUTH_PROVIDER  = SKIP_OMNIAUTH ? "google" : ask("Which OmniAuth provider would you like to use?:", default: "google", limited_to: %w[entra google github]).downcase
-SELECTED_DATABASE           = ask("Which database?:", default: "sqlite3", limited_to: %w[postgresql mysql sqlite3]).downcase
+SELECTED_DATABASE           = options[:database]
 
 
 
@@ -49,10 +49,14 @@ end
 # ADD AUTHENTICATION
 # =========================================================
 def add_authentication
+  # Generate necessary files
   rails_command("generate authentication")
   rails_command("generate controller StaticPages home --skip-routes --no-test-framework")
+
+  # Generate route
   route 'root "static_pages#home"'
 
+  # Allow public access to Home page
   inject_into_file "app/controllers/static_pages_controller.rb", after: "class StaticPagesController < ApplicationController" do
     "\nallow_unauthenticated_access only: %i[ home ]\n"
   end
@@ -71,6 +75,7 @@ def add_authentication
 
   rails_command("generate migration AddSourceToSessions source:string")
   rails_command("generate model OmniAuthIdentity uid:string provider:string user:references")
+
   route 'get "/auth/:provider/callback" => "sessions/omni_auths#create", as: :omniauth_callback'
   route 'get "/auth/failure" => "sessions/omni_auths#failure", as: :omniauth_failure'
 
@@ -178,7 +183,7 @@ def add_configurations
   # =========================================
   # Add Database Files
   # =========================================
-  unless SELECTED_DATABASE != "postegresql"
+  if SELECTED_DATABASE == "postegresql"
     file '.env.development' do
       <<-CODE.strip_heredoc
       DATABASE_URL=postgres://postgres:postgres@${DB_HOST}:5432/#{app_name.downcase}_development
@@ -414,6 +419,7 @@ after_bundle do
   add_configurations
   add_initializers
   add_rspec
+  add_factory_bot
   add_authentication unless SKIP_AUTHENTICATION
   add_setup
   add_ci
