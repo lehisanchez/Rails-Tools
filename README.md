@@ -136,11 +136,30 @@ RSpec.configure do |config|
 end
 ```
 
-### Initializer: Enable YJIT
+### Initializers
 
-Adds the following to an initializer file to enable YJIT.
+#### Monkey Patch Active Record
+
+The following will force drop PostgreSQL database tables even when there are active connections.
 
 ```ruby
+# config/initializers/monkey_patch_activerecord.rb
+# The following is necessary to be able to drop a
+# PostgreSQL database that has active connections
+class ActiveRecord::Tasks::PostgreSQLDatabaseTasks
+  def drop
+    establish_connection(public_schema_config)
+    connection.execute "DROP DATABASE IF EXISTS \"#{db_config.database}\" WITH (FORCE)"
+  end
+end
+```
+
+#### YJIT
+
+Add the following initializer file to enable YJIT.
+
+```ruby
+# config/initializers/enable_yjit.rb
 if defined? RubyVM::YJIT.enable
   Rails.application.config.after_initialize do
     RubyVM::YJIT.enable
@@ -155,28 +174,8 @@ _For PostgreSQL_
 Sets the global default primary_key to UUID by creating an initializer file
 
 ```ruby
+# config/initializers/enable_uuid.rb
 Rails.application.config.generators do |g|
   g.orm :active_record, primary_key_type: :uuid
 end
-```
-
-### Initializer: Time Formats
-
-The app I'm currently working on relies on date formats. I didn't think it would hurt if I kept this in.
-
-```ruby
-# Jan 01, 2023
-Date::DATE_FORMATS[:short] = "%b %d, %Y"
-
-# Sunday, January 01, 2023
-Date::DATE_FORMATS[:long] = "%A, %B %d, %Y"
-
-# Jan 01, 2023 03:30 PM
-Time::DATE_FORMATS[:short] = "%b %d, %Y %I:%M %p"
-
-# Sunday, January 01, 2023 at 03:30 PM
-Time::DATE_FORMATS[:long] = "%A, %B %d, %Y at %I:%M %p"
-
-# Jan 01, 2023 at 03:30 PM
-Time::DATE_FORMATS[:nice] = "%b %d, %Y at %I:%M %p"
 ```
