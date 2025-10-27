@@ -51,7 +51,7 @@ end
 def add_authentication
   # Generate necessary files
   rails_command("generate authentication")
-  rails_command("generate controller StaticPages home --skip-routes --no-test-framework")
+  rails_command("generate controller StaticPages home --skip-routes")
 
   # Generate route
   route 'root "static_pages#home"'
@@ -64,12 +64,15 @@ def add_authentication
   append_file 'db/seeds.rb' do
     <<-CODE.strip_heredoc
     User.create!(
+      username: "admin",
       email_address: "user@example.com",
       password: "password123", # Rails Auth will hash this automatically
       password_confirmation: "password123"
     )
     CODE
   end
+
+  rails_command("generate migration AddUsernameToSessions username:string")
 
   return if SKIP_OMNIAUTH
 
@@ -115,8 +118,34 @@ end
 # INSTALL RSpec
 # =========================================================
 def add_rspec
+  # Install RSpec
   rails_command("generate rspec:install")
+
+  # Modify Rails Helper file
   gsub_file 'spec/rails_helper.rb', '# Rails.root.glob', 'Rails.root.glob'
+
+  # Add Authentication Helpers
+  file 'spec/support/authentication_helpers.rb' do
+    <<-'RUBY'.strip_heredoc
+    RSpec.shared_context "authentication helpers" do
+      def sign_in_as(user)
+        Current.session = user.sessions.create!
+
+        ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
+          cookie_jar.signed[:session_id] = Current.session.id
+          cookies[:session_id] = cookie_jar[:session_id]
+        end
+      end
+
+      def sign_out
+        Current.session&.destroy!
+        cookies.delete(:session_id)
+      end
+    end
+
+    RSpec.configure { |config| config.include_context "authentication helpers" }
+    RUBY
+  end
 end
 
 
