@@ -110,11 +110,11 @@ Add the following to ~/.railsrc
 _For when using Postgresql_
 
 ```shell
-brew install postgresql@16 libpq
+brew install postgresql@18 libpq
 ```
 
 ```shell
-echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+echo 'export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"' >> ~/.zshrc
 ```
 
 ```shell
