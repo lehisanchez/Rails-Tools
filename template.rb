@@ -19,11 +19,11 @@ SELECTED_DATABASE           = options[:database]
 # =========================================================
 # ADD GEMS
 # =========================================================
-gem "bundler-audit"
+# gem "bundler-audit"
 gem "amazing_print"
 gem "rails_semantic_logger"
 gem "prefab-cloud-ruby"
-gem "rainbow"
+# gem "rainbow"
 
 gem_group :development, :test do
   gem "dotenv-rails"
@@ -61,18 +61,18 @@ def add_authentication
     "\nallow_unauthenticated_access only: %i[ home ]\n"
   end
 
+  rails_command("generate migration AddUsernameToSessions username:string")
+
   append_file 'db/seeds.rb' do
     <<-CODE.strip_heredoc
     User.create!(
-      username: "admin",
-      email_address: "user@example.com",
+      username: "swiftie",
+      email_address: "swiftie@example.com",
       password: "password123", # Rails Auth will hash this automatically
       password_confirmation: "password123"
     )
     CODE
   end
-
-  rails_command("generate migration AddUsernameToSessions username:string")
 
   return if SKIP_OMNIAUTH
 
@@ -109,7 +109,6 @@ def remove_files
   remove_file('config/credentials.yml.enc')
   remove_file('config/master.key')
   remove_file('config/database.yml') unless SELECTED_DATABASE == "sqlite3"
-  run("mv bin/setup bin/setup.sample")
 end
 
 
@@ -163,8 +162,6 @@ def add_factory_bot
   end
 end
 
-
-
 # =========================================================
 # APPLICATION CONFIGURATION
 # =========================================================
@@ -208,6 +205,16 @@ def add_configurations
   # Create .env files
   # =========================================
   run("touch .env.development .env.test .env.development.local .env.test.local")
+
+  environment <<-RUBY
+    Prefab.init
+  RUBY
+
+  file '.env.development' do
+    <<-CODE.strip_heredoc
+    PREFAB_DATASOURCES=LOCAL_ONLY
+    CODE
+  end
 
   # =========================================
   # Add Database Files
@@ -329,49 +336,51 @@ end
 # ADD SETUP FILE
 # =========================================================
 def add_setup
-  file 'bin/setup' do
-    <<-'RUBY'.strip_heredoc
-    #!/usr/bin/env ruby
-    require "fileutils"
-    require "rainbow/refinement"
+  # run("mv bin/setup bin/setup.sample")
 
-    using Rainbow
+  # file 'bin/setup' do
+  #   <<-'RUBY'.strip_heredoc
+  #   #!/usr/bin/env ruby
+  #   require "fileutils"
+  #   require "rainbow/refinement"
 
-    APP_ROOT = File.expand_path("..", __dir__)
+  #   using Rainbow
 
-    def system!(*args)
-      system(*args, exception: true)
-    end
+  #   APP_ROOT = File.expand_path("..", __dir__)
 
-    FileUtils.chdir APP_ROOT do
-      # This script is a way to set up or update your development environment automatically.
-      # This script is idempotent, so that you can run it at any time and get an expectable outcome.
-      # Add necessary setup steps to this file.
-      puts "Installing gems".blue.bright
-      # Only do bundle install if the much-faster
-      # bundle check indicates we need to
-      system("bundle check") || system!("bundle install")
+  #   def system!(*args)
+  #     system(*args, exception: true)
+  #   end
 
-      puts "Dropping & recreating the development database".blue.bright
-      # Note that the very first time this runs, db:reset
-      # will fail, but this failure is fixed by
-      # doing a db:migrate
-      system! "bin/rails db:reset || bin/rails db:migrate"
+  #   FileUtils.chdir APP_ROOT do
+  #     # This script is a way to set up or update your development environment automatically.
+  #     # This script is idempotent, so that you can run it at any time and get an expectable outcome.
+  #     # Add necessary setup steps to this file.
+  #     puts "Installing gems".blue.bright
+  #     # Only do bundle install if the much-faster
+  #     # bundle check indicates we need to
+  #     system("bundle check") || system!("bundle install")
 
-      puts "Dropping & recreating the test database".blue.bright
-      # Setting the RAILS_ENV explicitly to be sure
-      # we actually reset the test database
-      system!({ "RAILS_ENV" => "test" }, "bin/rails db:reset || bin/rails db:migrate")
+  #     puts "Dropping & recreating the development database".blue.bright
+  #     # Note that the very first time this runs, db:reset
+  #     # will fail, but this failure is fixed by
+  #     # doing a db:migrate
+  #     system! "bin/rails db:reset || bin/rails db:migrate"
 
-      puts "Removing old logs and tempfiles".blue.bright
-      system! "bin/rails log:clear tmp:clear"
+  #     puts "Dropping & recreating the test database".blue.bright
+  #     # Setting the RAILS_ENV explicitly to be sure
+  #     # we actually reset the test database
+  #     system!({ "RAILS_ENV" => "test" }, "bin/rails db:reset || bin/rails db:migrate")
 
-      puts "Done!".blue.bright
-    end
-    RUBY
-  end
+  #     puts "Removing old logs and tempfiles".blue.bright
+  #     system! "bin/rails log:clear tmp:clear"
 
-  run("chmod +x bin/setup")
+  #     puts "Done!".blue.bright
+  #   end
+  #   RUBY
+  # end
+
+  # run("chmod +x bin/setup")
 end
 
 
@@ -380,28 +389,29 @@ end
 # ADD CI FILE
 # =========================================================
 def add_ci
-  file 'bin/ci' do
-    <<-CODE.strip_heredoc
-    #!/usr/bin/env bash
+  # run("mv bin/ci bin/ci.sample")
+  # file 'bin/ci' do
+  #   <<-CODE.strip_heredoc
+  #   #!/usr/bin/env bash
 
-    set -e
+  #   set -e
 
-    echo "[ bin/ci ] Running RSpec tests"
-    bundle exec rspec
+  #   echo "[ bin/ci ] Running RSpec tests"
+  #   bundle exec rspec
 
-    echo "[ bin/ci ] Analyzing code for security vulnerabilities."
-    echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
-    echo "[ bin/ci ] can be opened in your browser."
-    bundle exec brakeman -q -o tmp/brakeman.html
+  #   echo "[ bin/ci ] Analyzing code for security vulnerabilities."
+  #   echo "[ bin/ci ] Output will be in tmp/brakeman.html, which"
+  #   echo "[ bin/ci ] can be opened in your browser."
+  #   bundle exec brakeman -q -o tmp/brakeman.html
 
-    echo "[ bin/ci ] Analyzing Ruby Gems"
-    bundle exec bundle audit check --update
+  #   echo "[ bin/ci ] Analyzing Ruby Gems"
+  #   bundle exec bundle audit check --update
 
-    echo "[ bin/ci ] Done"
-    CODE
-  end
+  #   echo "[ bin/ci ] Done"
+  #   CODE
+  # end
 
-  run("chmod +x bin/ci")
+  # run("chmod +x bin/ci")
 end
 
 
@@ -450,8 +460,8 @@ after_bundle do
   add_rspec
   add_factory_bot
   add_authentication unless SKIP_AUTHENTICATION
-  add_setup
-  add_ci
+  # add_setup
+  # add_ci
   add_readme
   run("bundle exec bin/setup --skip-server")
   run("bundle exec bin/ci")
