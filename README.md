@@ -36,11 +36,11 @@ rbenv init
 ### Install Ruby with YJIT enabled
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.7
+RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.8
 ```
 
 ```shell
-rbenv global 3.4.7
+rbenv global 3.4.8
 ```
 
 ```shell
@@ -56,7 +56,7 @@ ruby -v --yjit
 **You should see something like:**
 
 ```shell
-ruby 3.4.7 (2025-10-08 revision 7a5688e2a2) +YJIT +PRISM
+ruby 3.4.8 (2025-12-17 revision 995b59f666) +YJIT +PRISM [arm64-darwin25]
 ```
 
 ## Ruby Gem Environment

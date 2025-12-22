@@ -51,7 +51,7 @@ end
 def add_authentication
   # Generate necessary files
   rails_command("generate authentication")
-  rails_command("generate controller StaticPages home --skip-routes")
+  rails_command("generate controller StaticPages home dashboard --skip-routes")
 
   # Generate route
   route 'root "static_pages#home"'
