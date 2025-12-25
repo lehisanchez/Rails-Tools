@@ -17,7 +17,7 @@ My environment and workflow for Ruby on Rails application development.
 
 ### Prerequisites
 
-If we want to take advantage of YJIT in Ruby, we need to install Rust.
+If we want to take advantage of ZJIT in Ruby 4, we need to install Rust.
 
 ```bash
 brew install rust
@@ -33,7 +33,35 @@ brew install rbenv
 rbenv init
 ```
 
-### Install Ruby with YJIT enabled
+## Installing Ruby
+
+### Install Ruby 4 with ZJIT Enabled
+
+```shell
+RUBY_CONFIGURE_OPTS="--enable-zjit" rbenv install 4.0.0
+```
+
+```shell
+rbenv global 4.0.0
+```
+
+```shell
+rbenv rehash
+```
+
+**Check the installation**
+
+```shell
+ruby -v --zjit
+```
+
+**You should see something like:**
+
+```shell
+ruby 4.0.0 (2025-12-25 revision 553f1675f3) +ZJIT +PRISM
+```
+
+### Install Ruby 3.4.8 with YJIT Enabled
 
 ```shell
 RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.8
@@ -107,7 +135,7 @@ Add the following to ~/.railsrc
 
 ## Database
 
-_For when using Postgresql_
+_For when using PostgreSQL_
 
 ```shell
 brew install postgresql@18 libpq
