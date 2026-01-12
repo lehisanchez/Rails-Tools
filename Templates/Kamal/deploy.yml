@@ -1,0 +1,35 @@
+service: # APP NAME
+image: # REGISTRY NAME + APP NAME
+servers:
+  web:
+    - # IP ADDRESS OR FQDN
+deploy_timeout: 10
+drain_timeout: 10
+sshkit:
+  pool_idle_timeout: 300
+proxy:
+  ssl: true
+  host: # FQDN
+registry:
+  server: registry.digitalocean.com
+  username: # REGISTRY USERNAME
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+env:
+  clear:
+    RBENV_VERSION: RUBY_VERSION
+    RAILS_LOG_LEVEL: debug
+    SOLID_QUEUE_IN_PUMA: true
+  secret:
+    - RAILS_MASTER_KEY
+    - KAMAL_REGISTRY_PASSWORD
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+volumes:
+  # - "[APP_NAME]_storage:/rails/storage"
+asset_path: /rails/public/assets
+builder:
+  arch: amd64
