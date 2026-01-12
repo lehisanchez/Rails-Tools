@@ -19,16 +19,16 @@ SELECTED_DATABASE           = options[:database]
 # =========================================================
 # ADD GEMS
 # =========================================================
-gem "bundler-audit"
-gem "amazing_print"
-gem "rails_semantic_logger"
-gem "prefab-cloud-ruby"
-gem "rainbow"
+# gem "bundler-audit"
+# gem "amazing_print"
+# gem "rails_semantic_logger"
+# gem "prefab-cloud-ruby"
+# gem "rainbow"
 
 gem_group :development, :test do
   gem "dotenv-rails"
   gem "factory_bot_rails"
-  gem "faker"
+  # gem "faker"
   gem "rspec-rails", "~> 8.0.0"
 end
 
@@ -51,7 +51,7 @@ end
 def add_authentication
   # Generate necessary files
   rails_command("generate authentication")
-  rails_command("generate controller StaticPages home --skip-routes --no-test-framework")
+  rails_command("generate controller StaticPages home --skip-routes")
 
   # Generate route
   route 'root "static_pages#home"'
@@ -140,6 +140,9 @@ end
 # APPLICATION CONFIGURATION
 # =========================================================
 def add_configurations
+
+  environment 'config.active_record.schema_format = :sql'
+
   # config/application.rb
   # Disable generation of assets, helpers, and stylesheets
   # =========================================
