@@ -8,6 +8,7 @@
 # GEMS
 # =========================================================
 gem_group :development, :test do
+  gem "sqlite"
   gem "dotenv-rails"
   gem "factory_bot_rails"
   gem "faker", require: false
@@ -34,6 +35,8 @@ def add_rails_live_reload
 end
 
 def add_configurations
+  run("touch .env.development .env.test .env.development.local .env.test.local")
+
   # Update CI with RSpec
   inject_into_file "config/ci.rb", after: "step \"Style: Ruby\", \"bin/rubocop\"\n" do
     '  step "Style: RSpec", "bundle exec rspec"'
