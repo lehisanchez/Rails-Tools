@@ -8,16 +8,17 @@ My environment and workflow for Ruby on Rails application development.
 - [Download GitKraken](https://www.gitkraken.com/download)
 - [Download pgAdmin](https://www.pgadmin.org/download/)
 - [Download Docker](https://www.docker.com/products/docker-desktop/)
-- [Download MySQL Workbench](https://dev.mysql.com/downloads/workbench/)
 - [Install Brew](https://brew.sh/)
 - [Install Oh My Zsh](https://ohmyz.sh/)
 - [Download Inconsolata for Powerline (font)](https://github.com/powerline/fonts/tree/master/Inconsolata)
 
-## Ruby Environment
+## Ruby
 
 ### Prerequisites
 
-If we want to take advantage of ZJIT in Ruby 4, we need to install Rust.
+We need to install RBENV and RUST to manage our Ruby environments.
+
+### Install Rust
 
 ```bash
 brew install rust
@@ -33,16 +34,14 @@ brew install rbenv
 rbenv init
 ```
 
-## Installing Ruby
-
-### Install Ruby 4 with ZJIT Enabled
+### Install Ruby
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-zjit" rbenv install 4.0.0
+RUBY_CONFIGURE_OPTS="--enable-zjit --enable-yjit" rbenv install 4.0.1
 ```
 
 ```shell
-rbenv global 4.0.0
+rbenv global 4.0.1
 ```
 
 ```shell
@@ -58,38 +57,14 @@ ruby -v --zjit
 **You should see something like:**
 
 ```shell
-ruby 4.0.0 (2025-12-25 revision 553f1675f3) +ZJIT +PRISM
+ruby 4.0.1 (2026-01-13 revision e04267a14b) +ZJIT +PRISM [arm64-darwin24]
 ```
 
-### Install Ruby 3.4.8 with YJIT Enabled
 
-```shell
-RUBY_CONFIGURE_OPTS="--enable-yjit" rbenv install 3.4.8
-```
 
-```shell
-rbenv global 3.4.8
-```
+### Update Ruby Gem Environment
 
-```shell
-rbenv rehash
-```
-
-**Check the installation**
-
-```shell
-ruby -v --yjit
-```
-
-**You should see something like:**
-
-```shell
-ruby 3.4.8 (2025-12-17 revision 995b59f666) +YJIT +PRISM [arm64-darwin25]
-```
-
-## Ruby Gem Environment
-
-### Configure .gemrc
+#### Configure .gemrc
 
 Create a .gemrc file. See [https://guides.rubygems.org/](https://guides.rubygems.org/command-reference/#gem-environment).
 
@@ -107,7 +82,7 @@ gem: --no-document
 Update the gem system.
 
 ```shell
-gem update --system
+gem update --system && gem update
 ```
 
 ### Install Bundler and Rails
@@ -126,15 +101,17 @@ touch ~/.railsrc
 
 Add the following to ~/.railsrc
 
-```text
+```shell
 --css=tailwind
 --edge
 --devcontainer
---template=https://raw.githubusercontent.com/lehisanchez/Rails-Tools/main/template.rb
+--skip-test # I'll use RSpec
+--skip-system-test # I'll use RSpec
 ```
 
-## Database
+## Databases
 
+### PostgreSQL
 _For when using PostgreSQL_
 
 ```shell
@@ -151,7 +128,26 @@ echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
 
 ## Rails Application
 
-### RSpec Testing
+### RSpec
+
+Add the following to the application template:
+
+```ruby
+gem_group :development, :test do
+  gem "factory_bot_rails"
+  gem "faker", require: false
+  gem "rspec-rails", "~> 8.0.0"
+end
+```
+
+Install RSpec
+
+```Ruby
+def install_rspec
+  rails_command("generate rspec:install")
+  gsub_file 'spec/rails_helper.rb', '# Rails.root.glob', 'Rails.root.glob'
+end
+```
 
 ### Factory Bot
 
