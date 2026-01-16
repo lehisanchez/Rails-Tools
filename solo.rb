@@ -8,7 +8,6 @@
 # GEMS
 # =========================================================
 gem_group :development, :test do
-  gem "sqlite"
   gem "dotenv-rails"
   gem "factory_bot_rails"
   gem "faker", require: false
