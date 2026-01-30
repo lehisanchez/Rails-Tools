@@ -1,7 +1,7 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE SOLO v2
 # Author: Lehi Sanchez
-# Updated: 2026-01-29
+# Updated: 2026-01-30
 # =========================================================
 
 # =========================================================
@@ -18,22 +18,6 @@ end
 
 gem "amazing_print"
 gem "rails_semantic_logger"
-
-inject_into_file "config/ci.rb", after: "step \"Style: Ruby\", \"bin/rubocop\"\n" do
-  '  step "Style: RSpec", "bundle exec rspec"'
-end
-
-gsub_file 'bin/setup', "system! \"bin/rails db:reset\" if ARGV.include?(\"--reset\")",
-<<-EOS.strip_heredoc
-\tsystem! "bin/rails db:reset"
-\tsystem! "bin/rails db:migrate"
-\tsystem! "bin/rails db:seed"
-
-\tputs '\n== Preparing test database =='
-\tsystem!({ "RAILS_ENV" => "test" }, "bin/rails db:reset")
-EOS
-
-run("code bin/setup")
 
 environment <<-RUBY
   config.generators do |generator|
@@ -58,11 +42,42 @@ initializer 'enable_yjit.rb' do
   RUBY
 end
 
+def install_rails_live_reload
+  rails_command("generate rails_live_reload:install")
+end
+
+def install_rspec
+  # RSpec Install
+  rails_command("generate rspec:install")
+
+  # Enable something...
+  gsub_file 'spec/rails_helper.rb', '# Rails.root.glob', 'Rails.root.glob'
+
+  # Add RSpec test to bin/ci
+  inject_into_file "config/ci.rb", after: "step \"Style: Ruby\", \"bin/rubocop\"\n" do
+    '  step "Style: RSpec", "bundle exec rspec"'
+  end
+end
+
+def prepare_databases
+  rails_command("db:create")
+  rails_command("db:migrate")
+end
+
+def run_setup_and_ci
+  run("bundle exec bin/setup --skip-server --reset")
+  run("bundle exec bin/ci")
+end
+
+def install_rails_authentication
+  rails_command("generate authentication")
+end
+
 after_bundle do
-  # rails_command("generate rails_live_reload:install")
-  # rails_command("generate rspec:install")
-  # gsub_file 'spec/rails_helper.rb', '# Rails.root.glob', 'Rails.root.glob'
-  # run("bundle exec bin/setup --skip-server")
-  # run("bundle exec bin/ci")
-  # run("code .")
+  install_rspec
+  install_rails_live_reload
+  install_rails_authentication
+  prepare_databases
+  run_setup_and_ci
+  run("code .")
 end
