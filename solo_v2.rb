@@ -89,6 +89,11 @@ def install_rails_live_reload
   rails_command("generate rails_live_reload:install")
 end
 
+
+
+# =============================================================
+# INSTALL RSPEC
+# =============================================================
 def install_rspec
   # RSpec Install
   rails_command("generate rspec:install")
@@ -157,7 +162,7 @@ def add_pages
 
   # allow unauthenticated access to home
   inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
-    "\n\tallow_unauthenticated_access only: %i[ home ]"
+    "\n  allow_unauthenticated_access only: %i[ home ]"
   end
 
   # remove home file
@@ -188,9 +193,22 @@ def add_pages
     CODE
   end
 
-  # adjust request test file
-  gsub_file 'spec/requests/pages_spec.rb', 'describe "GET /home" do', 'describe "GET /" do'
-  gsub_file 'spec/requests/pages_spec.rb', 'get "/pages/home"', 'get "/"'
+  remove_file('spec/requests/pages_spec.rb')
+
+  file 'spec/requests/pages_spec.rb' do
+    <<-'RUBY'.strip_heredoc
+    require 'rails_helper'
+
+    RSpec.describe "Pages", type: :request do
+      describe "GET /" do
+        it "returns http success" do
+          get "/"
+          expect(response).to have_http_status(:success)
+        end
+      end
+    end
+    RUBY
+  end
 end
 
 after_bundle do
