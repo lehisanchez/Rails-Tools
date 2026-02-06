@@ -1,10 +1,8 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE SOLO v2
 # Author: Lehi Sanchez
-# Updated: 2026-01-30
+# Updated: 2026-02-06
 # =========================================================
-
-
 
 # =========================================================
 # GEMS
@@ -20,17 +18,21 @@ gem_group :development do
   gem "rails_live_reload"
 end
 
+# Authentication
+gem "devise", "~> 5.0"
+
+# Logging
 gem "amazing_print"
 gem "rails_semantic_logger"
 
 
 
 # =============================================================
-# GIT IGNORE
+# GIT
 # =============================================================
-append_file '.gitignore' do
-  <<-CODE.strip_heredoc
+# Append the following text to .gitignore
 
+gitignore_text = <<-CODE.strip_heredoc
   # The .env file is read for both dev and test
   # and creates more problems than it solves, so
   # we never ever want to use it
@@ -44,25 +46,40 @@ append_file '.gitignore' do
   # Ignore hidden system files
   .DS_Store
   Thumbs.db
-  CODE
-end
+CODE
+
+append_file '.gitignore', gitignore_text
 
 
 # =============================================================
 # ENVIRONMENT CONFIGURATION
 # =============================================================
-environment <<-RUBY
-  config.generators do |generator|
-    generator.assets false
-    generator.helper false
-    generator.stylesheets false
+# Use the following environment variables
+
+env_generators_config = <<-RUBY
+  config.generators do |g|
+    g.assets false
+    g.helper false
+    g.stylesheets false
+    g.after_generate do |files|
+      files.each do |file|
+        next unless File.exist?(file)
+        system("bundle exec rubocop -A --fail-level=A \#{file}")
+      end
+    end
   end
 RUBY
 
+# Generator Settings
+environment env_generators_config, env: "development"
+
+# Logging Settings
 environment 'config.rails_semantic_logger.rendered   = false'
 environment 'config.rails_semantic_logger.processing = false'
 environment 'config.rails_semantic_logger.started    = false'
 environment 'config.rails_semantic_logger.semantic   = false'
+
+# Schema Format
 environment 'config.active_record.schema_format = :sql'
 
 
@@ -70,15 +87,13 @@ environment 'config.active_record.schema_format = :sql'
 # =============================================================
 # INITIALIZERS
 # =============================================================
-initializer 'enable_yjit.rb' do
-  <<-'RUBY'.strip_heredoc
+initializer 'enable_yjit.rb', <<-'RUBY'.strip_heredoc
   if defined? RubyVM::YJIT.enable
     Rails.application.config.after_initialize do
       RubyVM::YJIT.enable
     end
   end
   RUBY
-end
 
 
 
@@ -161,9 +176,9 @@ def add_pages
   rails_command("generate controller Pages home --skip-routes")
 
   # allow unauthenticated access to home
-  inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
-    "\n  allow_unauthenticated_access only: %i[ home ]"
-  end
+  # inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
+  #   "\n  allow_unauthenticated_access only: %i[ home ]"
+  # end
 
   # remove home file
   remove_file('app/views/pages/home.html.erb')
@@ -211,11 +226,17 @@ def add_pages
   end
 end
 
+def install_devise
+  rails_command("generate devise:install")
+  run("bundle exec rubocop app spec config/initializers/devise.rb -a")
+end
+
 after_bundle do
   install_rspec
   install_factory_bot
   install_rails_live_reload
-  add_authentication
+  install_devise
+  # add_authentication
   add_pages
   prepare_databases
   run_setup_and_ci
