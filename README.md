@@ -102,11 +102,46 @@ touch ~/.railsrc
 Add the following to ~/.railsrc
 
 ```shell
---css=tailwind
+# =====================
+# Configuration
+# =====================
 --edge
 --devcontainer
---skip-test # I'll use RSpec
---skip-system-test # I'll use RSpec
+--css=tailwind
+
+# =====================
+# Skips
+# =====================
+
+# --skip-solid
+# --skip-action-cable
+# --skip-action-mailer
+--skip-action-mailbox
+# --skip-action-text
+# --skip-active-job
+# --skip-active-record
+# --skip-active-storage
+# --skip-asset-pipeline
+# --skip-ci
+# --skip-git
+# --skip-hotwire
+# --skip-action-cable
+# --skip-bootsnap
+# --skip-brakeman
+# --skip-bundler-audit
+# --skip-dev-gems
+# --skip-docker
+# --skip-jbuilder
+# --skip-kamal
+# --skip-rubocop
+# --skip-thruster
+--skip-test
+--skip-system-test
+
+# =====================
+# Template
+# =====================
+# --template=~/Code/Rails-Tools/solo_v2.rb
 ```
 
 ## Databases
