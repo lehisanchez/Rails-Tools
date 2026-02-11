@@ -3,6 +3,8 @@
 # Author: Lehi Sanchez
 # Updated: 2026-02-06
 # =========================================================
+# use_rails_authentication  = yes?("Use Rails authentication?")
+# use_devise_authentication = yes?("Use Devise authentication?")
 
 # =========================================================
 # GEMS
@@ -19,7 +21,7 @@ gem_group :development do
 end
 
 # Authentication
-gem "devise", "~> 5.0"
+# gem "devise", "~> 5.0" unless use_devise_authentication != true
 
 # Logging
 gem "amazing_print"
@@ -87,10 +89,30 @@ environment 'config.active_record.schema_format = :sql'
 # =============================================================
 # INITIALIZERS
 # =============================================================
+
+# ================================================
+# config/initializers/enable_yjit.rb
+# ================================================
 initializer 'enable_yjit.rb', <<-'RUBY'.strip_heredoc
   if defined? RubyVM::YJIT.enable
     Rails.application.config.after_initialize do
       RubyVM::YJIT.enable
+    end
+  end
+  RUBY
+
+# ================================================
+# config/initializers/postgres.rb
+# ================================================
+initializer 'postgres.rb', <<-'RUBY'.strip_heredoc
+  # The following is necessary to be able to drop a
+  # PostgreSQL database that has active connections
+  if Rails.env.development?
+    class ActiveRecord::Tasks::PostgreSQLDatabaseTasks
+      def drop
+        establish_connection(public_schema_config)
+        connection.execute "DROP DATABASE IF EXISTS \"#{db_config.database}\" WITH (FORCE)"
+      end
     end
   end
   RUBY
@@ -173,12 +195,12 @@ end
 # =============================================================
 def add_pages
   # generate pages controller
-  rails_command("generate controller Pages home --skip-routes")
+  rails_command("generate controller Pages home --skip-routes --no-request-specs --no-controller-specs")
 
   # allow unauthenticated access to home
-  # inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
-  #   "\n  allow_unauthenticated_access only: %i[ home ]"
-  # end
+  inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
+    "\n  allow_unauthenticated_access only: %i[ home ]"
+  end
 
   # remove home file
   remove_file('app/views/pages/home.html.erb')
@@ -193,10 +215,11 @@ def add_pages
   route 'root to: "pages#home"'
 
   # remove generated test file
-  remove_file('spec/views/pages/home.html.tailwindcss_spec.rb')
+  # remove_file('spec/views/pages/home.html.tailwindcss_spec.rb')
 
   # create a new test file
-  file 'spec/views/pages/home.html.erb_spec.rb' do <<-CODE.strip_heredoc
+  file 'spec/views/pages/home.html.erb_spec.rb' do
+    <<-CODE.strip_heredoc
     require 'rails_helper'
 
     RSpec.describe "pages/home", type: :view do
@@ -208,7 +231,7 @@ def add_pages
     CODE
   end
 
-  remove_file('spec/requests/pages_spec.rb')
+  # remove_file('spec/requests/pages_spec.rb')
 
   file 'spec/requests/pages_spec.rb' do
     <<-'RUBY'.strip_heredoc
@@ -235,9 +258,9 @@ after_bundle do
   install_rspec
   install_factory_bot
   install_rails_live_reload
-  install_devise
+  # install_devise unless use_devise_authentication != true
   # add_authentication
-  add_pages
+  # add_pages
   prepare_databases
   run_setup_and_ci
   run("code .")
