@@ -238,3 +238,27 @@ Rails.application.config.generators do |g|
   g.orm :active_record, primary_key_type: :uuid
 end
 ```
+
+# Adjust .devcontainer Configuration
+
+PostgreSQL applications need a few adjustments to the .devcontainer configuration.
+
+- Bump image version to match local machine version
+- Fix a known bug with volume storage
+
+**PREVIOUS**
+```yaml
+# .devcontainer/compose.yaml
+postgres:
+  image: postgres:16.1 # <- bump this to match local version
+  volumes:
+    - postgres-data:/var/lib/postgresql/data # <- don't use data folder
+```
+**CURRENT**
+```yaml
+# .devcontainer/compose.yaml
+postgres:
+  image: postgres:18.1
+  volumes:
+    - postgres-data:/var/lib/postgresql
+```

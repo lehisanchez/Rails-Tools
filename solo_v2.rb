@@ -18,6 +18,8 @@ end
 
 gem_group :development do
   gem "rails_live_reload"
+  gem "ruby-lsp"
+  gem "foreman"
 end
 
 # Authentication
@@ -104,7 +106,7 @@ initializer 'enable_yjit.rb', <<-'RUBY'.strip_heredoc
 # ================================================
 # config/initializers/postgres.rb
 # ================================================
-initializer 'postgres.rb', <<-'RUBY'.strip_heredoc
+initializer 'monkey_patch_active_record.rb', <<-'RUBY'.strip_heredoc
   # The following is necessary to be able to drop a
   # PostgreSQL database that has active connections
   if Rails.env.development?
@@ -195,7 +197,7 @@ end
 # =============================================================
 def add_pages
   # generate pages controller
-  rails_command("generate controller Pages home --skip-routes --no-request-specs --no-controller-specs")
+  rails_command("generate controller Pages home --skip-routes --no-view-specs --no-request-specs")
 
   # allow unauthenticated access to home
   inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
@@ -254,13 +256,19 @@ def install_devise
   run("bundle exec rubocop app spec config/initializers/devise.rb -a")
 end
 
+def fix_devcontainer
+  gsub_file '.devcontainer/compose.yaml', 'postgres-data:/var/lib/postgresql/data', 'postgres-data:/var/lib/postgresql'
+  gsub_file '.devcontainer/compose.yaml', 'postgres:16.1', 'postgres:18.1'
+end
+
 after_bundle do
   install_rspec
   install_factory_bot
   install_rails_live_reload
   # install_devise unless use_devise_authentication != true
-  # add_authentication
-  # add_pages
+  add_authentication
+  add_pages
+  fix_devcontainer
   prepare_databases
   run_setup_and_ci
   run("code .")
