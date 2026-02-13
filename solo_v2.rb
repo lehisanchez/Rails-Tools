@@ -1,8 +1,24 @@
 # =========================================================
 # RUBY ON RAILS APPLICATION TEMPLATE SOLO v2
 # Author: Lehi Sanchez
-# Updated: 2026-02-06
+# Updated: 2026-02-13
 # =========================================================
+
+APP_NAME = app_name
+APP_DB   = database.name
+
+
+# =========================================================
+# CUSTOMIZATIONS
+# =========================================================
+SKIP_AUTHENTICATION         = yes?("Add authentication? (y/n):") ? false : true
+SKIP_OMNIAUTH               = SKIP_AUTHENTICATION ? true : ( yes?("Would you like to add OmniAuth? (y/n):") ? false : true )
+SELECTED_OMNIAUTH_PROVIDER  = SKIP_OMNIAUTH ? "google" : ask("Which OmniAuth provider would you like to use?:", default: "google", limited_to: %w[entra google github]).downcase
+SELECTED_DATABASE           = options[:database]
+
+
+# add_authentication = yes?("Add authentication?")
+#
 # use_rails_authentication  = yes?("Use Rails authentication?")
 # use_devise_authentication = yes?("Use Devise authentication?")
 
@@ -12,23 +28,30 @@
 gem_group :development, :test do
   gem "dotenv-rails"
   gem "factory_bot_rails"
-  gem "faker"
   gem "rspec-rails", "~> 8.0.0"
 end
 
 gem_group :development do
+  gem "faker"
+  gem "foreman"
   gem "rails_live_reload"
   gem "ruby-lsp"
-  gem "foreman"
+end
+
+group :test do
+  gem "shoulda-matchers"
 end
 
 # Authentication
-# gem "devise", "~> 5.0" unless use_devise_authentication != true
+gem "devise", "~> 5.0" unless SKIP_DEVISE
+gem "sqlite3", ">= 2.1" unless APP_DB == 'sqlite3'
 
 # Logging
 gem "amazing_print"
 gem "rails_semantic_logger"
 
+# Components
+gem "view_component", "~> 4.3"
 
 
 # =============================================================
@@ -166,7 +189,58 @@ end
 # =============================================================
 # DATABASES
 # =============================================================
-def prepare_databases
+def prepare_databases(database)
+
+  if database == "postgresql"
+    # Remove original database configuration
+    remove_file('config/database.yml')
+
+    file 'config/database.yml' do
+      <<-CODE.strip_heredoc
+      default: &postgresql
+        adapter: postgresql
+        encoding: unicode
+        # For details on connection pooling, see Rails configuration guide
+        # https://guides.rubyonrails.org/configuring.html#database-pooling
+        max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+        <% if ENV["DB_HOST"] %>
+        host: <%= ENV["DB_HOST"] %>
+        username: postgres
+        password: postgres
+        <% end %>
+
+      default: &sqlite
+        adapter: sqlite3
+        max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+        timeout: 5000
+
+      development:
+        <<: *postgresql
+        database: #{APP_NAME.downcase}_development
+
+      test:
+        <<: *postgresql
+        database: #{APP_NAME.downcase}_test
+
+      production:
+        primary: &primary_production
+          url: <%= Rails.application.credentials.dig(:db, :url) %>
+        cache:
+          <<: *sqlite
+          database: storage/production_cache.sqlite3
+          migrations_paths: db/cache_migrate
+        queue:
+          <<: *sqlite
+          database: storage/production_queue.sqlite3
+          migrations_paths: db/queue_migrate
+        cable:
+          <<: *sqlite
+          database: storage/production_cable.sqlite3
+          migrations_paths: db/cable_migrate
+      CODE
+    end
+  end
+
   rails_command("db:create")
   rails_command("db:migrate")
 end
@@ -265,11 +339,11 @@ after_bundle do
   install_rspec
   install_factory_bot
   install_rails_live_reload
-  # install_devise unless use_devise_authentication != true
-  add_authentication
+  install_devise
+  # add_authentication
   add_pages
   fix_devcontainer
-  prepare_databases
+  prepare_databases(APP_DB)
   run_setup_and_ci
   run("code .")
 end
