@@ -127,7 +127,8 @@ initializer 'enable_yjit.rb', <<-'RUBY'.strip_heredoc
 # ================================================
 # config/initializers/postgres.rb
 # ================================================
-initializer 'monkey_patch_active_record.rb', <<-'RUBY'.strip_heredoc
+if database.name == 'postgres'
+  initializer 'monkey_patch_active_record.rb', <<-'RUBY'.strip_heredoc
   # The following is necessary to be able to drop a
   # PostgreSQL database that has active connections
   if Rails.env.development?
@@ -139,7 +140,7 @@ initializer 'monkey_patch_active_record.rb', <<-'RUBY'.strip_heredoc
     end
   end
   RUBY
-
+end
 
 
 # =============================================================
@@ -233,7 +234,7 @@ end
 # =============================================================
 def prepare_databases(database)
 
-  if database == "postgresql"
+  if database == "postgres"
     # Remove original database configuration
     remove_file('config/database.yml')
 
@@ -419,6 +420,12 @@ def fix_devcontainer
   gsub_file '.devcontainer/compose.yaml', 'postgres-data:/var/lib/postgresql/data', 'postgres-data:/var/lib/postgresql'
   gsub_file '.devcontainer/compose.yaml', 'postgres:16.1', 'postgres:18.1'
   gsub_file 'Dockerfile', 'postgresql-client', 'postgresql-client sqlite3'
+  gsub_file '.devcontainer/devcontainer.json', '"ghcr.io/rails/devcontainer/features/postgres-client": {}', '"ghcr.io/rails/devcontainer/features/postgres-client": {},'
+  inject_into_file '.devcontainer/devcontainer.json', after: "\"ghcr.io/rails/devcontainer/features/postgres-client\": {},\n" do
+    <<-CODE.strip_heredoc
+    "ghcr.io/rails/devcontainer/features/sqlite3:1": {}
+    CODE
+  end
 end
 
 after_bundle do
@@ -427,8 +434,9 @@ after_bundle do
   install_rails_live_reload
   add_authentication unless SKIP_AUTHENTICATION
   add_pages
-  fix_devcontainer unless database.name != 'postgresql'
+  fix_devcontainer unless database.name != 'postgres'
   prepare_databases(database.name)
   run_setup_and_ci
+  # run("code .devcontainer/devcontainer.json")
   run("code .")
 end
