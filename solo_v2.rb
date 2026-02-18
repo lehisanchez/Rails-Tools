@@ -40,7 +40,10 @@ end
 
 # Authentication
 gem "devise", "~> 5.0" if AUTH_PROVIDER == 'devise'
+
+# Databases
 gem "sqlite3", ">= 2.1" unless database.name == 'sqlite3'
+gem "sqlite_crypto" unless database.name != 'sqlite3'
 
 # Logging
 gem "amazing_print"
@@ -79,9 +82,14 @@ append_file '.gitignore', gitignore_text
 # =============================================================
 # ENVIRONMENT CONFIGURATION
 # =============================================================
-# Use the following environment variables
 
-env_generators_config = <<-RUBY
+environment_variables = <<-'RUBY'.strip_heredoc
+  config.generators do |g|
+    g.orm :active_record, primary_key_type: :uuid
+  end
+RUBY
+
+environment_variables_dev = <<-'RUBY'.strip_heredoc
   config.generators do |g|
     g.assets false
     g.helper false
@@ -96,7 +104,8 @@ env_generators_config = <<-RUBY
 RUBY
 
 # Generator Settings
-environment env_generators_config, env: "development"
+environment environment_variables
+environment environment_variables_dev, env: "development"
 
 # Logging Settings
 environment 'config.rails_semantic_logger.rendered   = false'
@@ -106,6 +115,8 @@ environment 'config.rails_semantic_logger.semantic   = false'
 
 # Schema Format
 environment 'config.active_record.schema_format = :sql'
+
+# environment 'g.orm :active_record, primary_key_type: :uuid'
 
 
 
@@ -342,6 +353,18 @@ def add_authentication
   end
 end
 
+# =============================================================
+# ADD MIGRATIONS
+# =============================================================
+def enable_uuid
+  generate(:migration, "EnableUUID")
+
+  inject_into_file Dir.glob("db/migrate/*_enable_uuid.rb").first, after: "def change\n" do <<-'RUBY'
+    enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
+    RUBY
+  end
+end
+
 
 
 # =============================================================
@@ -428,10 +451,16 @@ def fix_devcontainer
   end
 end
 
+def install_sqlite_encryption
+  rails_command("generate sqlite_crypto:install")
+end
+
 after_bundle do
   install_rspec
   install_factory_bot
   install_rails_live_reload
+  install_sqlite_encryption unless database.name != 'sqlite3'
+  enable_uuid unless database.name != 'postgres'
   add_authentication unless SKIP_AUTHENTICATION
   add_pages
   fix_devcontainer unless database.name != 'postgres'
