@@ -4,16 +4,21 @@
 # Updated: 2026-02-13
 # =========================================================
 
-# Template file has access to the following generator variables
-# app_name
-# database.name
+# Template file has access to the following generator variables:
+# - app_name: The name of the Rails application being generated
+# - database: An object representing the chosen database, with
+#             a `name` method that returns the database name as
+#             a string (e.g., "postgres", "sqlite3", etc.)
 
+APP_NAME = app_name
+DATABASE_TYPE = database.name
 
 
 # =========================================================
 # CUSTOMIZATIONS
 # =========================================================
 @auth_question = 'Which auth provider?:'
+SKIP_UUID = yes?("Use UUID as Primary Keys? (y/n):") ? false : true
 SKIP_AUTHENTICATION = yes?("Add authentication? (y/n):") ? false : true
 AUTH_PROVIDER = SKIP_AUTHENTICATION ? nil : ask(@auth_question, default: "", limited_to: %w[rails devise]).downcase
 
@@ -43,7 +48,7 @@ gem "devise", "~> 5.0" if AUTH_PROVIDER == 'devise'
 
 # Databases
 gem "sqlite3", ">= 2.1" unless database.name == 'sqlite3'
-gem "sqlite_crypto" unless database.name != 'sqlite3'
+gem "sqlite_crypto" unless SKIP_UUID
 
 # Logging
 gem "amazing_print"
@@ -198,6 +203,7 @@ def install_rspec
     module AuthenticationHelper
       def sign_in_as(user)
         session = user.sessions.create!(
+          id: SecureRandom.uuid,
           user_agent: "test",
           ip_address: "127.0.0.1"
         )
@@ -270,11 +276,11 @@ def prepare_databases(database)
 
       development:
         <<: *postgresql
-        database: #{app_name.downcase}_development
+        database: #{APP_NAME.downcase}_development
 
       test:
         <<: *postgresql
-        database: #{app_name.downcase}_test
+        database: #{APP_NAME.downcase}_test
 
       production:
         primary: &primary_production
@@ -297,6 +303,7 @@ def prepare_databases(database)
 
   rails_command("db:create")
   rails_command("db:migrate")
+  rails_command("db:test:prepare")
 end
 
 
@@ -357,11 +364,14 @@ end
 # ADD MIGRATIONS
 # =============================================================
 def enable_uuid
-  generate(:migration, "EnableUUID")
 
-  inject_into_file Dir.glob("db/migrate/*_enable_uuid.rb").first, after: "def change\n" do <<-'RUBY'
-    enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
-    RUBY
+  if DATABASE_TYPE == 'postgres'
+    generate(:migration, "EnableUUID")
+
+    inject_into_file Dir.glob("db/migrate/*_enable_uuid.rb").first, after: "def change\n" do <<-'RUBY'
+      enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
+      RUBY
+    end
   end
 end
 
@@ -385,7 +395,7 @@ def add_pages
   # create home file
   file 'app/views/pages/home.html.erb' do
     <<-CODE.strip_heredoc
-    <h1 class="text-4xl font-bold">#{app_name.capitalize}</h1>
+    <h1 class="text-4xl font-bold">#{APP_NAME.capitalize}</h1>
     CODE
   end
 
@@ -400,7 +410,7 @@ def add_pages
     RSpec.describe "pages/home", type: :view do
       it "displays the header" do
         render
-        expect(rendered).to match /#{app_name.capitalize}/
+        expect(rendered).to match /#{APP_NAME.capitalize}/
       end
     end
     CODE
@@ -455,12 +465,18 @@ def install_sqlite_encryption
   rails_command("generate sqlite_crypto:install")
 end
 
+def enable_uuid_compatibility
+
+end
+
 after_bundle do
+  install_sqlite_encryption unless SKIP_UUID
   install_rspec
   install_factory_bot
   install_rails_live_reload
-  install_sqlite_encryption unless database.name != 'sqlite3'
-  enable_uuid unless database.name != 'postgres'
+  enable_uuid unless SKIP_UUID
+  # enable_uuid unless database.name != 'postgres'
+  # enable_uuid_compatibility
   add_authentication unless SKIP_AUTHENTICATION
   add_pages
   fix_devcontainer unless database.name != 'postgres'
