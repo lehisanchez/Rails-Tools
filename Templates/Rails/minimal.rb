@@ -264,6 +264,13 @@ def run_setup_and_ci
 end
 
 
+# =============================================================
+# GIT
+# =============================================================
+def commit
+  git add: "."
+  git commit: "-a -m 'Initial commit'"
+end
 
 # =========================================================
 # AFTER BUNDLE
@@ -277,5 +284,6 @@ after_bundle do
   install_static_pages
   prepare_databases
   run_setup_and_ci
+  commit
   run("code .")
 end
