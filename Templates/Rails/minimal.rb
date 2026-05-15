@@ -42,6 +42,7 @@ append_file '.gitignore', "# Ignore hidden system files\n.DS_Store\nThumbs.db\n"
 # DATABASES
 # ==========================
 remove_file('db/seeds.rb')
+
 file 'db/seeds.rb', "require 'securerandom'\n"
 
 
