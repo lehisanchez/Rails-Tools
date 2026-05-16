@@ -62,8 +62,6 @@ environment <<-CODE.strip_heredoc
 
   CODE
 
-# Schema Format
-# environment 'config.active_record.schema_format = :sql'
 
 # =========================================================
 # INITIALIZERS
