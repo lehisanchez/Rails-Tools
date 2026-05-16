@@ -5,20 +5,12 @@
 # =========================================================
 
 # =========================================================
-# GEMS
+# GEMFILE
 # =========================================================
-gem_group :development do
-  gem "foreman"
-  gem "rails_live_reload"
-  gem "ruby-lsp"
-end
+remove_file "Gemfile"
 
-gem_group :test do
-  gem "simplecov", require: false
-end
+get "https://github.com/lehisanchez/Rails-Tools/raw/refs/heads/main/Templates/Rails/baseline_gemfile.rb", "Gemfile"
 
-gem "maquina-components"
-gem "sqlite_crypto" if database.name == 'sqlite3'
 
 # =========================================================
 # FILES & FOLDERS
