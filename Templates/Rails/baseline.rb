@@ -1,7 +1,7 @@
 # =========================================================
-# RUBY ON RAILS APPLICATION TEMPLATE MINIMAL
+# RUBY ON RAILS BASELINE APPLICATION TEMPLATE
 # Author: Lehi Sanchez
-# Updated: 2026-04-09
+# Updated: 2026-05-16
 # =========================================================
 
 # =========================================================
@@ -79,86 +79,43 @@ initializer 'enable_yjit.rb', <<-CODE.strip_heredoc
   CODE
 
 # =========================================================
-# INSTALLERS
+# STATIC PAGES
 # =========================================================
-
-# SQLite Encryption
-def install_sqlite_encryption
-  rails_command("generate sqlite_crypto:install")
-end
-
-# Rails Live Reload
-def install_rails_live_reload
-  rails_command("generate rails_live_reload:install")
-end
-
-# Authentication
-def install_authentication
-  rails_command("generate authentication")
-
-  append_file 'db/seeds.rb' do
-    <<-CODE.strip_heredoc
-
-    User.find_or_create_by!(email_address: "admin@example.com") do |user|
-      user.id = SecureRandom.uuid
-      user.password = "example"
-      user.password_confirmation = "example"
-    end
-    CODE
-  end
-end
-
-# Static Pages
 def install_static_pages
-  rails_command("generate controller Pages index --skip-routes")
+  rails_command("generate controller Pages welcome dashboard --skip-routes")
+
   inject_into_file "app/controllers/pages_controller.rb", after: "class PagesController < ApplicationController" do
-    "\n  allow_unauthenticated_access only: %i[ index ]"
+    "\n  allow_unauthenticated_access only: %i[ welcome ]"
   end
-  remove_file('app/views/pages/index.html.erb')
-  file 'app/views/pages/index.html.erb' do
+
+  remove_file('app/views/pages/welcome.html.erb')
+
+  file 'app/views/pages/welcome.html.erb' do
     <<-CODE.strip_heredoc
-    <h1 class="text-4xl font-bold">#{app_name.capitalize}</h1>
+    <%= render "components/header" do %>
+      <%= render "components/sidebar/trigger" %>
+      <%= render "components/separator", orientation: :vertical %>
+      <h1 class="text-sm font-medium">#{app_name.capitalize}</h1>
+    <% end %>
     CODE
   end
-  route 'root to: "pages#index"'
+
+  route 'root to: "pages#welcome"'
 end
 
-# =========================================================
-# DATABASES
-# =========================================================
-def prepare_databases
-  rails_command("db:create")
-  rails_command("db:migrate")
-  rails_command("db:seed")
-  rails_command("db:test:prepare")
-end
-
-# =============================================================
-# SETUP & CI
-# =============================================================
-def run_setup_and_ci
-  run("bundle exec bin/setup --skip-server --reset")
-  run("bundle exec bin/ci")
-end
-
-# =============================================================
-# GIT
-# =============================================================
-def commit
-  git add: "."
-  git commit: "-a -m 'Initial commit'"
-end
 
 # =========================================================
 # AFTER BUNDLE
 # =========================================================
 after_bundle do
-  install_rails_live_reload
-  install_sqlite_encryption
-  install_authentication
+  rails_command("generate rails_live_reload:install")
+  rails_command("generate sqlite_crypto:install")
+  rails_command("generate maquina_components:install")
+  rails_command("generate authentication")
   install_static_pages
-  prepare_databases
-  run_setup_and_ci
-  commit
+  run("bundle exec bin/setup --skip-server --reset")
+  run("bundle exec bin/ci")
+  git add: "."
+  git commit: "-a -m 'Initial commit'"
   run("code .")
 end
