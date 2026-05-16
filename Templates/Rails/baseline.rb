@@ -13,7 +13,11 @@ gem_group :development do
   gem "ruby-lsp"
 end
 
-# Databases
+gem_group :test do
+  gem "simplecov", require: false
+end
+
+gem "maquina-components"
 gem "sqlite_crypto" if database.name == 'sqlite3'
 
 # =========================================================
@@ -21,9 +25,29 @@ gem "sqlite_crypto" if database.name == 'sqlite3'
 # =========================================================
 
 # ==========================
+# AGENT FILES
+# ==========================
+empty_directory ".claude"
+create_file ".claude/CLAUDE.md"
+create_file "AGENTS.md"
+create_file "STYLES.md" do
+  ""
+end
+
+get "https://raw.githubusercontent.com/basecamp/fizzy/7ef7a8e49b6143a43fcf9f413785767cc511ae12/STYLE.md", "STYLE.md"
+
+# ==========================
+# SimpleCov
+# ==========================
+prepend_to_file "test/test_helper.rb" do
+  "require \"simplecov\"\nSimpleCov.start \"rails\"\n\n"
+end
+
+# ==========================
 # GIT
 # ==========================
 append_file '.gitignore', "# Ignore hidden system files\n.DS_Store\nThumbs.db\n"
+append_file '.gitignore', "# Ignore SimpleCov files\ncoverage\n"
 
 # =========================================================
 # ENVIRONMENT
