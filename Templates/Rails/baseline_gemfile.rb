@@ -5,6 +5,7 @@ gem "rails", github: "rails/rails", branch: "8-1-stable"
 
 # Assets & front end
 gem "importmap-rails"
+gem "maquina-components"
 gem "propshaft"
 gem "stimulus-rails"
 gem "tailwindcss-rails"
