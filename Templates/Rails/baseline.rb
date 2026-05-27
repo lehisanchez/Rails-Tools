@@ -81,7 +81,13 @@ create_file "AGENTS.md" do
 
   ## Stack
 
-  Ruby 4.0.4, Rails 8.1 (`8-1-stable` from GitHub). SQLite everywhere — primary DB plus Solid Queue/Cache/Cable, each in its own file under `storage/`. Propshaft + Import Maps + Tailwind; Hotwire (Turbo + Stimulus) with `maquina-components`. Minitest + Capybara/Selenium. Kamal + Thruster + Puma for deploy.
+  - Ruby 4.0.5
+  - Rails 8.1 (`8-1-stable` from GitHub)
+  - SQLite everywhere — primary DB plus Solid Queue/Cache/Cable, each in its own file under `storage/`
+  - Propshaft + Import Maps + Tailwind
+  - Hotwire (Turbo + Stimulus) with `maquina-components`
+  - Minitest + Capybara/Selenium
+  - Kamal + Thruster + Puma for deploy.
 
   Solid Queue runs in-Puma via `SOLID_QUEUE_IN_PUMA`. Schemas for the Solid trio are in `db/{queue,cache,cable}_schema.rb`, separate from `db/schema.rb`. Active Storage is local disk (`config/storage.yml`). PWA stubs exist in `app/views/pwa/` but routes are commented out.
 
