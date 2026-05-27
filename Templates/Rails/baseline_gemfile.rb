@@ -19,7 +19,7 @@ gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 gem "sqlite3", ">= 2.1"
-gem "sqlite_crypto", "~> 2.1"
+gem "sqlite_crypto", "~> 2.2"
 gem "thruster", require: false
 
 # Features
