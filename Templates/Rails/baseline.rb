@@ -20,9 +20,11 @@ get "https://github.com/lehisanchez/Rails-Tools/raw/refs/heads/main/Templates/Ra
 # AGENT FILES
 # ==========================
 empty_directory ".claude"
+
 create_file ".claude/CLAUDE.md" do
   "@../AGENTS.md"
 end
+
 create_file "AGENTS.md" do
   <<-CODE.strip_heredoc
   # AGENTS.md
