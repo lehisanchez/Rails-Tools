@@ -32,17 +32,19 @@ group :development, :test do
   gem "bundler-audit", require: false
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
-  gem "rubycritic", require: false
+  gem "ruby-lsp"
 end
 
 group :development do
+  gem "foreman"
   gem "rails_live_reload"
-  gem "ruby-lsp"
   gem "web-console"
 end
 
 group :test do
   gem "capybara"
+  gem "rubycritic", require: false
   gem "selenium-webdriver"
   gem "simplecov", require: false
+  gem "webmock", require: false
 end
