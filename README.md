@@ -37,11 +37,11 @@ rbenv init
 ### Install Ruby
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-zjit --enable-yjit" rbenv install 4.0.1
+RUBY_CONFIGURE_OPTS="--enable-zjit --enable-yjit" rbenv install 4.0.6
 ```
 
 ```shell
-rbenv global 4.0.1
+rbenv global 4.0.6
 ```
 
 ```shell
@@ -57,7 +57,7 @@ ruby -v --zjit
 **You should see something like:**
 
 ```shell
-ruby 4.0.1 (2026-01-13 revision e04267a14b) +ZJIT +PRISM [arm64-darwin24]
+ruby 4.0.6 (2026-07-14 revision 03b6d3f889) +ZJIT +PRISM
 ```
 
 
@@ -122,7 +122,7 @@ Add the following to ~/.railsrc
 # --skip-active-record
 # --skip-active-storage
 # --skip-asset-pipeline
-# --skip-ci
+--skip-ci
 # --skip-git
 # --skip-hotwire
 # --skip-action-cable
@@ -135,13 +135,13 @@ Add the following to ~/.railsrc
 # --skip-kamal
 # --skip-rubocop
 # --skip-thruster
---skip-test
---skip-system-test
+# --skip-test
+# --skip-system-test
 
 # =====================
 # Template
 # =====================
-# --template=~/Code/Rails-Tools/solo_v2.rb
+--template=~/Code/Rails-Tools/Templates/Rails/baseline.rb
 ```
 
 ## Databases
