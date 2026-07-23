@@ -19,7 +19,7 @@ gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 gem "sqlite3", ">= 2.1"
-gem "sqlite_crypto", "~> 2.2"
+gem "sqlite_crypto"
 gem "thruster", require: false
 
 # Features
@@ -32,16 +32,19 @@ group :development, :test do
   gem "bundler-audit", require: false
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
+  gem "ruby-lsp"
 end
 
 group :development do
+  gem "foreman"
   gem "rails_live_reload"
-  gem "ruby-lsp"
   gem "web-console"
 end
 
 group :test do
   gem "capybara"
+  gem "rubycritic", require: false
   gem "selenium-webdriver"
   gem "simplecov", require: false
+  gem "webmock", require: false
 end
