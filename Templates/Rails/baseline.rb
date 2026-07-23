@@ -20,9 +20,11 @@ get "https://github.com/lehisanchez/Rails-Tools/raw/refs/heads/main/Templates/Ra
 # AGENT FILES
 # ==========================
 empty_directory ".claude"
+
 create_file ".claude/CLAUDE.md" do
   "@../AGENTS.md"
 end
+
 create_file "AGENTS.md" do
   <<-CODE.strip_heredoc
   # AGENTS.md
@@ -52,13 +54,16 @@ create_file "AGENTS.md" do
   PARALLEL_WORKERS=1 bin/rails test
   ```
 
-  CI pipeline (`bin/ci`) runs:
-  1. Rubocop (style)
-  2. Bundler audit (gem security)
-  3. Importmap audit
-  4. Brakeman (security scan)
-  5. Application tests
-  6. System tests
+  CI pipeline — `bin/ci` is a thin wrapper that runs the step list in `config/ci.rb`, which uses Rails 8.1's `ActiveSupport::ContinuousIntegration` DSL. Steps, in order:
+  1. Setup (`bin/setup --skip-server`)
+  2. Rubocop (style)
+  3. Bundler audit (gem security)
+  4. Importmap audit
+  5. Brakeman (security scan)
+  6. Application tests (`bin/rails test`)
+  7. Seeds load check (`env RAILS_ENV=test bin/rails db:seed:replant`)
+
+  System tests are defined but commented out in `config/ci.rb` — they do **not** run in CI by default.
 
   ### Database
   ```bash
@@ -81,7 +86,7 @@ create_file "AGENTS.md" do
 
   ## Stack
 
-  - Ruby 4.0.5
+  - Ruby 4
   - Rails 8.1 (`8-1-stable` from GitHub)
   - SQLite everywhere — primary DB plus Solid Queue/Cache/Cable, each in its own file under `storage/`
   - Propshaft + Import Maps + Tailwind
@@ -108,9 +113,8 @@ create_file "AGENTS.md" do
   ### Background Jobs (Solid Queue)
 
   Database-backed job queue (no Redis):
-  - Custom `BaselineActiveJobExtensions` prepended to ActiveJob
-  - Jobs automatically capture/restore `Current`
   - Solid Queue, Solid Cache, and Solid Cable all run on SQLite — no Redis or other broker is required.
+  - `ApplicationJob` is the stock Rails default — no custom ActiveJob extensions.
   - Recurring/scheduled jobs are configured in `config/recurring.yml`.
 
   ### Frontend
@@ -130,6 +134,7 @@ create_file "AGENTS.md" do
   - **Never** modify `db/schema.rb` directly — only via migrations.
   - When adding a route, prefer a new resource over a custom action.
   - Ask before creating new abstractions or files not directly needed.
+  - **Verify** the spec-driven-development plugin is available before planning or building a feature; if it's missing, prompt the user to install it (see [Spec-Driven Development (SDD)](#spec-driven-development-sdd) under Tools).
 
   ## Testing Conventions
 
@@ -137,6 +142,9 @@ create_file "AGENTS.md" do
   - Test files mirror app structure: `app/models/user.rb` → `test/models/user_test.rb`.
   - System tests live in `test/system/` and use Capybara.
   - Don't mock the database — tests hit the real SQLite test DB.
+  - Stub external HTTP with WebMock — don't hit the real network in tests.
+  - Sign a user in for controller/integration tests with `SessionTestHelper` (`test/test_helpers/session_test_helper.rb`).
+  - Coverage is tracked by SimpleCov (started in `test/test_helper.rb`; reports land in `coverage/`).
 
   ### TDD Workflow (required)
 
@@ -153,6 +161,36 @@ create_file "AGENTS.md" do
   - Ask before creating new abstractions or files not directly needed.
 
   ## Tools
+
+  ### Spec-Driven Development (SDD)
+
+  This project expects the **spec-driven-development** plugin (from Maquina's `rails-claude-code` marketplace). It provides a Rails-focused workflow that shapes feature ideas into specs, breaks them into ordered tasks, and tracks progress across sessions in an `sdd/` directory. Full docs: https://maquina.app/documentation/ai-tools/spec-driven-development/
+
+  **Agents must confirm this plugin is available before planning or building a feature.** Verify the `/sdd-*` commands below appear in your available commands/skills. If they are missing, stop and prompt the user to install it — do not proceed with feature work without it. Install with:
+
+  ```
+  /plugin marketplace add maquina-app/rails-claude-code
+  /plugin install spec-driven-development@maquina
+  ```
+
+  To enable it automatically for everyone on the project, add to `.claude/settings.json`:
+
+  ```json
+  { "enabledPlugins": ["spec-driven-development@maquina"] }
+  ```
+
+  Commands (run in order for a new feature):
+
+  | Command | What it does |
+  |---|---|
+  | `/sdd-init` | Bootstrap `sdd/` — Rails standards, `index.yml`, and a progress tracker |
+  | `/sdd-plan` | Create/update product mission, roadmap, and tech-stack docs |
+  | `/sdd-discover-standards` | Extract coding standards from the existing codebase |
+  | `/sdd-shape` | Shape a feature spec (questions → codebase search → `spec.md`) |
+  | `/sdd-tasks` | Break the current spec into task groups with ready-to-run prompts |
+  | `/sdd-status` | Show progress and suggest the next command |
+
+  Run `/sdd-init` first — it creates the `sdd/` directory (with a `progress.yml` tracker). This repo is not yet initialized (no `sdd/` directory).
 
   ### Chrome MCP (Local Dev)
 
