@@ -262,3 +262,12 @@ postgres:
   volumes:
     - postgres-data:/var/lib/postgresql
 ```
+
+## Agentic Development
+
+### Claude Code
+
+#### Marketplaces
+
+- JuliusBrussee/caveman
+- maquina-app/rails-claude-code
