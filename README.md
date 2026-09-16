@@ -37,11 +37,11 @@ rbenv init
 ### Install Ruby
 
 ```shell
-RUBY_CONFIGURE_OPTS="--enable-zjit --enable-yjit" rbenv install 4.0.6
+RUBY_CONFIGURE_OPTS="--enable-zjit --enable-yjit" rbenv install 4.0.7
 ```
 
 ```shell
-rbenv global 4.0.6
+rbenv global 4.0.7
 ```
 
 ```shell
@@ -57,7 +57,7 @@ ruby -v --zjit
 **You should see something like:**
 
 ```shell
-ruby 4.0.6 (2026-07-14 revision 03b6d3f889) +ZJIT +PRISM
+ruby 4.0.7 (2026-09-15 revision 229531a6cf) +ZJIT +PRISM [arm64-darwin25]
 ```
 
 
